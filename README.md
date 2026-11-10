@@ -15,11 +15,12 @@ No IPC channel is required for inter process cosmetic injections and no preload 
 Cosmetic filtering works across attached sub_frame and main_frame with no reliance on ordinary page-script access or same-origin restrictions.
 
 Built on AdGuard's powerful `tsurlfilter` engine, selected for this package after out-performing competing engines in real world blocking comparison score.
-Adblock-Electron updates filters every 12 hours fetching from fastest-responder of 4 [adtidy-filter-mirror](https://github.com/gingergeek8192/adtidy-filter-mirror) hosts, maintained for redundant filter delivery through independent infrastructures.
+
+Adblock-Electron updates non-deprecated (87 currently) filter lists every 12 hours fetching from fastest-responder of 4 [adtidy-filter-mirror](https://github.com/gingergeek8192/adtidy-filter-mirror) hosts, maintained for robust redundancy across 3 independent networks. 
 
 
 ## Test Results
-- screenshots
+- Adblock Test Screenshots
 
 <details>
 <summary>View Screenshots</summary>
@@ -34,12 +35,12 @@ Adblock-Electron updates filters every 12 hours fetching from fastest-responder 
 
 </details>
 
-- Test Logs
+- Adblock Test Logs
 
 <details>
 <summary>View Logs</summary>
 
-```js
+```json
 Adblock Ready
 adblock-create-ready
 ────────────────────────────────────────────────────────────────────────
@@ -134,3 +135,11 @@ adblock-create-ready
 ```
 
 </details>
+
+
+
+## API
+
+```js
+
+```
