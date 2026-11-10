@@ -15,27 +15,29 @@ No IPC channel is required for inter process cosmetic injections and no preload 
 Cosmetic filtering works across attached sub_frame and main_frame with no reliance on ordinary page-script access or same-origin restrictions.
 
 Built on AdGuard's powerful `tsurlfilter` engine, selected for this package after out-performing competing engines in real world blocking comparison score.
-Adblock-Electron fetches filters every 12 hours from the quickest responser of 4 resources maintained for redundant filter delivery through independently hosted sources.
+Adblock-Electron updates filters every 12 hours fetching from fastest-responder of 4 [adtidy-filter-mirror](https://github.com/gingergeek8192/adtidy-filter-mirror) hosts, maintained for redundant filter delivery through independent infrastructures.
+
 
 ## Test Results
+- screenshots
 
-| Test | Score | Resources blocked |
-|---|---:|---:|
-| Super Adblock Test | 90% | 442 / 482 |
-| Obfuscated | 91% | 325 / 356 |
-| Ad Block Tester | 100% | 132 / 132 |
-| Can You Block It | 100% | — |
-| Blockify | 97% | — |
+<details>
+<summary>View Screenshots</summary>
 
-## Screenshots
+<p>
+<a href="https://raw.githubusercontent.com/gingergeek8192/Adblock-Electron/main/docs/Ad-Blocker-Test.png"><img src="https://raw.githubusercontent.com/gingergeek8192/Adblock-Electron/main/docs/Ad-Blocker-Test.png" width="360" height="203"></a>
+<a href="https://raw.githubusercontent.com/gingergeek8192/Adblock-Electron/main/docs/Blockify.png"><img src="https://raw.githubusercontent.com/gingergeek8192/Adblock-Electron/main/docs/Blockify.png" width="360" height="203"></a>
+<a href="https://raw.githubusercontent.com/gingergeek8192/Adblock-Electron/main/docs/OBFUSCATED.png"><img src="https://raw.githubusercontent.com/gingergeek8192/Adblock-Electron/main/docs/OBFUSCATED.png" width="360" height="203"></a>
+<a href="https://raw.githubusercontent.com/gingergeek8192/Adblock-Electron/main/docs/Can-You-Block-It.png"><img src="https://raw.githubusercontent.com/gingergeek8192/Adblock-Electron/main/docs/Can-You-Block-It.png" width="360" height="203"></a>
+<a href="https://raw.githubusercontent.com/gingergeek8192/Adblock-Electron/main/docs/SUPER-ADBLOCK-TEST.png"><img src="https://raw.githubusercontent.com/gingergeek8192/Adblock-Electron/main/docs/SUPER-ADBLOCK-TEST.png" width="360" height="203"></a>
+</p>
 
-<a href="https://raw.githubusercontent.com/gingergeek8192/Adblock-Electron/main/docs/SUPER-ADBLOCK-TEST.png"><img src="https://raw.githubusercontent.com/gingergeek8192/Adblock-Electron/main/docs/SUPER-ADBLOCK-TEST.png" width="380" height="214"></a>
-<a href="https://raw.githubusercontent.com/gingergeek8192/Adblock-Electron/main/docs/OBFUSCATED.png"><img src="https://raw.githubusercontent.com/gingergeek8192/Adblock-Electron/main/docs/OBFUSCATED.png" width="380" height="214"></a>
-<a href="https://raw.githubusercontent.com/gingergeek8192/Adblock-Electron/main/docs/Ad-Blocker-Test.png"><img src="https://raw.githubusercontent.com/gingergeek8192/Adblock-Electron/main/docs/Ad-Blocker-Test.png" width="380" height="214"></a>
-<a href="https://raw.githubusercontent.com/gingergeek8192/Adblock-Electron/main/docs/Can-You-Block-It.png"><img src="https://raw.githubusercontent.com/gingergeek8192/Adblock-Electron/main/docs/Can-You-Block-It.png" width="380" height="214"></a>
-<a href="https://raw.githubusercontent.com/gingergeek8192/Adblock-Electron/main/docs/Blockify.png"><img src="https://raw.githubusercontent.com/gingergeek8192/Adblock-Electron/main/docs/Blockify.png" width="380" height="214"></a>
+</details>
 
-## Test Logs
+- Test Logs
+
+<details>
+<summary>View Logs</summary>
 
 ```js
 Adblock Ready
@@ -130,3 +132,5 @@ adblock-create-ready
 }
 ────────────────────────────────────────────────────────────────────────
 ```
+
+</details>

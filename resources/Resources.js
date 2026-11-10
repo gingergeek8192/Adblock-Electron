@@ -474,6 +474,20 @@ const Resources = Object.assign(
         )
         .catch(() => ({ json: null, source: null }))
     },
+    async _rankSources() {
+        const probes = [
+            ['downloadUrl', this.ADTIDY_JSON],
+            ['mirrorUrl',   this.GITHUB_PING],
+            ['jsDelivrUrl', this.JSDELIVR_PING],
+            ['gitlabUrl',   this.GITLAB_PING],
+        ]
+        const timed = await Promise.all(probes.map(async ([key, url]) => {
+            const t = performance.now()
+            const ok = await fetch(url, { method: 'HEAD' }).then(r => r.ok).catch(() => false)
+            return { key, ms: ok ? performance.now() - t : Infinity }
+        }))
+        this.order = timed.sort((a, b) => a.ms - b.ms).map(t => t.key)
+    },
     /**
      * Fetches and validates any filter lists that are missing or expired,
      * loading them into `listMap` and `metaMap`. Triggers `_ready()` once all settled.
@@ -481,27 +495,22 @@ const Resources = Object.assign(
      * @returns {void}
      */
     _processLists(lists, branch) {
-        Promise.allSettled(
-            lists.map( 
-                (ent)=> {
+        this._rankSources().then(() =>
+            Promise.allSettled(
+                lists.map((ent) => {
                     if ((!ent.toUpdate || ent.expires > Date.now()) && this.paths.includes(ent.storePath)) return
-                    return this._fetchAndValidate([ 
-                            ent.downloadUrl, 
-                            ent.mirrorUrl, 
-                            ent.jsDelivrUrl, 
-                            ent.gitlabUrl 
-                        ],
+                    return this._fetchAndValidate(
+                        this.order.map(k => ent[k]),
                         ent.filterId
                     )
                     .then(({ normalized, checksum, valid }) => {
-                            if (!valid) 
-                                return Promise.reject({ filterId: ent.filterId, valid: false, checksum: null })
-                            this._listMap({ ...ent, content: normalized })
-                            this._metaMap({ ...ent, checksum: checksum, valid, })
-                        return { filterId: ent.filterId, valid, checksum };
+                        if (!valid)
+                            return Promise.reject({ filterId: ent.filterId, valid: false, checksum: null })
+                        this._listMap({ ...ent, content: normalized })
+                        this._metaMap({ ...ent, checksum: checksum, valid })
+                        return { filterId: ent.filterId, valid, checksum }
                     })
-
-                }
+                })
             )
         )
         .then(R => {
@@ -509,7 +518,7 @@ const Resources = Object.assign(
                 const percent = this._failRate(R)
                 if (percent > 0)
                     this._throwBack('ERROR', 'RESOURCE_DOWNLOAD', 100 - percent)
-            } 
+            }
             void this[branch]()
         })
     },
@@ -760,11 +769,14 @@ const Resources = Object.assign(
                                 if (t.status === 'fulfilled') {
                                     updatedAtMap.set(Date.parse(t.value.updatedAt), t.value.updatedAt)
                                     nextUpdateMap.set(Date.parse(t.value.nextUpdate), t.value.nextUpdate)
+                                    
                                 }
                             })
                             if (!this.nextUpdate || update) {
-                                this.nextUpdate = nextUpdateMap.get(Math.max([...nextUpdateMap.keys()]))
-                                this.updatedAt = updatedAtMap.get(Math.max([...updatedAtMap.keys()]))
+                                console.log(updatedAtMap, nextUpdateMap, nextUpdateMap.get(Math.max(...nextUpdateMap.keys())) )
+                                this.nextUpdate = nextUpdateMap.get(Math.max(...nextUpdateMap.keys()))
+                                this.updatedAt = updatedAtMap.get(Math.max(...updatedAtMap.keys()))
+                                console.log(this.nextUpdate, this.updatedAt)
                                 this._setStoredMeta()
                             }
                             return this._setUpdateScheduleEvents()
