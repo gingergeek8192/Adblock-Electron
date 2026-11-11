@@ -20,7 +20,7 @@ Adblock-Electron updates every 12 hours fetching from fastest responder of 4 [ad
 
 
 ## Test Results
-- Test Site Screenshots 📋
+- Test Site Screenshots 🖥️
 
 <p>
 <a href="https://raw.githubusercontent.com/gingergeek8192/Adblock-Electron/main/docs/Ad-Blocker-Test.png"><img src="https://raw.githubusercontent.com/gingergeek8192/Adblock-Electron/main/docs/Ad-Blocker-Test.png" width="280" height="160"></a>
@@ -30,10 +30,9 @@ Adblock-Electron updates every 12 hours fetching from fastest responder of 4 [ad
 </p>
 
 
-- Adblock Test Logs
+- Adblock Test Logs 📋
 
 <details>
-<summary>View Screenshots 📋</summary> 
 <summary>View Logs </summary>
 
 ```js
