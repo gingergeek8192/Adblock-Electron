@@ -9,10 +9,11 @@ An Electron adblocking package built on AdGuard's `tsurlfilter` engine.
 
 <br>
 
-Adblock-Electron lets you decide how it integrates with your app.
+Adblock-Electron lets you decide how it integrates with your application.
 <br> 
-Network request blocking, cosmetic filtering and script injection without claiming ownership of `onBeforeRequest` or `setWindowOpenHandler`<br>
-Built on AdGuard's powerful `tsurlfilter` engine with cosmetic filtering for sub_frames and main_frame with no cross-origin restrictions . 
+Network request blocking without claiming ownership of `onBeforeRequest` or `setWindowOpenHandler`. 
+<br> Cosmetic filtering and script injection to sub_frames and main_frame with no cross-origin restrictions.<br>
+Built on AdGuard's powerful `tsurlfilter` engine. 
 
 Adblock-Electron updates every 12 hours fetching from fastest responder of [adtidy-filter-mirror](https://github.com/gingergeek8192/adtidy-filter-mirror)<br> 
 The adtidy-filter-mirror is  maintained for Adblock-Electron first run and update redundancy.<br> With 4 hosts (AdTidy, GitHub, jsDelivr, GitLab) across 3 independent CDN networks `Qrator`, `Fastly` and `Cloudflare`.<br>
