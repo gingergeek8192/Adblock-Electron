@@ -13,6 +13,7 @@ Adblock-Electron lets you decide how it integrates with your application.
 <br> 
 Network request blocking without claiming ownership of `onBeforeRequest(()=>{})` or `setWindowOpenHandler(()=>{})`. 
 <br> Cosmetic filtering and script injection to sub_frames and main_frame with no cross-origin restrictions.
+
 <br>
 Built on AdGuard's powerful `tsurlfilter` engine. 
 
