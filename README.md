@@ -192,7 +192,7 @@ Calling `setResources` at earliest opportunity is advised
 ```
 First run is non-blocking regardless of `withBuildSync` setting. <br>
 Adblock-electron downloads and builds the engine asynchronously, `createReady` is triggered before filters are asynchronously cached. <br>
-On subsequent runs `withBuildSync:true` will build the engine synchronously before the consumer window appears.
+On subsequent runs `withBuildSync: true` will build the engine synchronously before the consumer window appears.
 
 ```js
 Adblock.setResources({
@@ -206,7 +206,7 @@ Adblock.setResources({
 })
 ```
 
-With `withBuildSync:false` (default), the engine builds asynchronously and createReady is emitted when it’s ready. 
+With `withBuildSync: false` (default), the engine builds asynchronously and `createReady` is emitted when it’s ready. 
 <br>
 <br>
 
