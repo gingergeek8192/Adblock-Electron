@@ -240,9 +240,21 @@ const Adblock = {
         this.setWindowOpenHandler = (webContents, callback) => {
         const Adblock = Manager.register.get(webContents.id);
         Adblock.on("open-allow", callback);
+            Adblock.removeAllListeners('window-handler-reset')
+            Adblock.once('window-handler-reset', ()=> {
+                this.setWindowOpenHandler = ()=> {
+                    const error = new Error(
+                        "Adblock must be instantiated with withWindowOpenHandler: true before setWindowOpenHandler listener",
+                    );
+                    Error.captureStackTrace(error, Adblock.setWindowOpenHandler);
+                    throw error;
+                }
+                
+            })
         };
 
         Manager.register.set(webContents.id, Adblock);
+
     },
 
     /**

@@ -288,7 +288,7 @@ With `withBuildSync: false` (default), the engine builds asynchronously and `cre
 <br>
 
 <details>
-<summary>createAdblock options 📋</summary>
+<summary>createAdblock options 📋 💬 </summary>
 
 | Name | Type | Default | Description |
 |---|---|---|---|

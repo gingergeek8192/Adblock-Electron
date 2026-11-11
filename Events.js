@@ -46,6 +46,7 @@ const Events = {
         if (!this.webContents.isDestroyed()) this.webContents.destroy();
         if (win && !win.isDestroyed()) win.destroy();
         if (Manager.register.has(this.id)) Manager.register.delete(this.id);
+        if (Manager.register.size === 0) this.emit('window-handler-reset')
       });
 
     if (win && !win.isDestroyed()) onClose();
