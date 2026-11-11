@@ -11,7 +11,7 @@ An Electron adblocking package built on AdGuard's `tsurlfilter` engine.
 
 Adblock-Electron lets you decide how it integrates with your application.
 <br> 
-Network request blocking without claiming ownership of `onBeforeRequest` or `setWindowOpenHandler`. 
+Network request blocking without claiming ownership of `onBeforeRequest(()=>{})` or `setWindowOpenHandler(()=>{})`. 
 <br> Cosmetic filtering and script injection to sub_frames and main_frame with no cross-origin restrictions.<br>
 Built on AdGuard's powerful `tsurlfilter` engine. 
 
@@ -159,20 +159,20 @@ To filter network requests without taking ownership of key Electron event handle
 
 ...or as a **callback** via a **listener registered** on the Adblock Object...
 
-- `Adblock.onBeforeReady(blocker => blocker.onBeforeRequest({}))`
+- `Adblock.onBeforeReady(blocker => blocker.onBeforeRequest(()=>{}))`
 
 The availability of event handlers depends on the configuration specified during `createAdblock({...})` instantiation and the lifecycle of the class instance.<br>
 Adblock-Electron's initialization API is therefore primarily event-driven. <br>
 <br>
 
 
-❗ **Event-driven:** `setResources({...})` → `createReady(()=>{})` → `createAdblock({...})` → `onBeforeReady(()=>{})` → `setWindowOpenHandler(()=>{})` → `urlReady(()=>{})`
+❗ **Event-driven:** `setResources({})` → `createReady(()=>{})` → `createAdblock({})` → `onBeforeReady(()=>{})` → `setWindowOpenHandler(()=>{})` → `urlReady(()=>{})`
 
 The Adblock `tsurlfilter` engine must be initialized before Adblock instantiation.
 
 <br>
 
-## Initialize `tsurlfilter` Adblock-Engine 
+## Initialize `tsurlfilter` Adblock-Engine `setResources({})`
 
 ### ⚙️ Options
 
@@ -230,8 +230,9 @@ Group names are case-insensitive. An invalid name throws an error listing the su
 </details>
 <br>
 
-Calling `setResources()` without arguments defaults `withGroups` to all filter groups and `withLanguageSpecific` to English.
+Calling `setResources({})` without arguments defaults `withGroups` to all filter groups and `withLanguageSpecific` to English.
 ```js
+
 Adblock.setResources() // without args builds with defaults as below
 
 Adblock.setResources({
@@ -247,21 +248,25 @@ Adblock.setResources({
         "Language"
     ] // default all filter list groupIds included
 })
+
 ```
-Calling `setResources` at earliest opportunity is advised
+Calling `setResources({})` at earliest opportunity is advised
 ```js
+
 // electron event
 // app.whenReady().then(() => {
 
   Adblock.setResources()
 
 // })
+
 ```
 First run is non-blocking regardless of `withBuildSync` setting. <br>
 Adblock-Electron downloads and builds the engine asynchronously, `createReady` is triggered before filters are asynchronously cached. <br>
 On subsequent runs `withBuildSync: true` will build the engine synchronously before the consumer window appears.
 
 ```js
+
 Adblock.setResources({
     withBuildSync: true,
     withGroups: [
@@ -272,17 +277,27 @@ Adblock.setResources({
         "Language"
     ]
 })
+
 ```
 
-With `withBuildSync: false` (default), the engine builds asynchronously and `createReady` is emitted when it is ready. 
+With `withBuildSync: false` (default), the engine builds asynchronously and `createReady(()=>{})` is emitted when it is ready. 
 <br>
-## ⚡ Creating Adblock Instance
+## ⚡ Creating Adblock Instance `createAdblock({...})`
+
+- 🚨 Note: 
+  <br>
+  Adblock `Object` refers to the global Object exposing the Adblock-Electron API
+  <br>
+  Adblock `instance` refers to the ad blocking / filtering `class` instance
+
+
+ 
 
 ### ⚙️ Options
 
 - Mandatory `webContents` instance (looked up via `webContents.id`)
-- Setting `withBeforeRequest: true` registers `onBeforeReady` on the Adblock Object
-- Setting `withWindowOpenHandler: true` registers `setWindowOpenHandler` on the Adblock Object
+- Setting `withBeforeRequest: true` registers `onBeforeReady(()=>{})` on the Adblock Object
+- Setting `withWindowOpenHandler: true` registers `setWindowOpenHandler(()=>{})` on the Adblock Object
 
 <br>
 
@@ -292,8 +307,8 @@ With `withBuildSync: false` (default), the engine builds asynchronously and `cre
 | Name | Type | Default | Description |
 |---|---|---|---|
 | `webContents` | `Electron.WebContents` | - | Target to attach to |
-| `withBeforeRequest` | `boolean` | `false` | `true`: consumer owns `onBeforeRequest` via `onBeforeReady` |
-| `withWindowOpenHandler` | `boolean` | `false` | `true`: consumer decides window opens via `setWindowOpenHandler` |
+| `withBeforeRequest` | `boolean` | `false` | `true`: consumer owns `onBeforeRequest(()=>{})` via `onBeforeReady(()=>{})` |
+| `withWindowOpenHandler` | `boolean` | `false` | `true`: consumer decides window opens via `setWindowOpenHandler(()=>{})` |
 | `withAllowIncludesArray` | `string[]` | `[]` | URL substrings exempted from blocking. Block matches take precedence. |
 | `withBlockIncludesArray` | `string[]` | `['devtools', 'devtool']` | URL substrings always blocked. |
 | `withAutoAttachFilter` | `Object[]` | `workers` | Attachment types excluded from interception. Defaults to `service_worker`, `shared_worker`, and `worker`. |
@@ -314,12 +329,10 @@ What began as a solution to a specific problem evolved into an independent adblo
 
 <br>
 
-The Adblock class can be instantiated once the `createReady()` event has fired.  
-If `createReady()` has not been registered, `isReady()` can be called. It returns `true` if the engine is ready, or `false` if the event is pending.
-
 Instantiating Adblock with `createAdblock({...})` on the `createReady(()=>{})` event:
 
 ```js
+
 Adblock.createReady(() => 
     Adblock.createAdblock({
         webContents: win.webContents
@@ -345,10 +358,11 @@ Adblock.createAdblock({
 ```
 <br>
 
-The Adblock class can be instantiated once the `createReady()` event has fired.<br> 
-If `createReady()` has not been registered, `isReady()` can be called. It returns `true` if the engine is ready, or `false` if the event is pending.
+The Adblock class can be instantiated once the `createReady(()=>{})` event has fired.<br> 
+If `createReady(()=>{})` has not been registered, `isReady()` can be called. It returns `true` if the engine is ready, or `false` if the event is pending.
 
 ```js
+
 if (Adblock.isReady()) {
     // Engine ready
     // createAdblock({...})
@@ -358,16 +372,23 @@ if (Adblock.isReady()) {
         // createAdblock({...})
     })
 }
+
 ``` 
 <br>
 
-Instantiating the Adblock class setting `withBeforeRequest: true` binds Electron's `onBeforeRequest` listener to the Adblock class instance and the `onBeforeReady(()=>{})` event listener is made available to the consumer on the Adblock Object.
-The registered event listener fires and passes `onBeforeRequest` to the consumer as a callback.
+## `onBeforeRequest(()=>{})`
 
-❗ Adblock's `onBeforeReady(()=>{})` can only be registered after `createReady()` has fired and `createAdblock({ withBeforeRequest: true })` is called.
+
+Instantiating the Adblock class setting `withBeforeRequest: true` binds Electron's `onBeforeRequest(()=>{})` listener to the Adblock class instance and the `onBeforeReady(()=>{})` event listener is made available to the consumer on the Adblock Object.
+The registered event listener fires and passes `onBeforeRequest(()=>{})` to the consumer as a callback.
+
+❗ Adblock's `onBeforeReady(()=>{})` can only be registered after `createReady(()=>{})` has fired and `createAdblock({ withBeforeRequest: true })` is called.
 
 ```js
-Adblock.onBeforeReady(win.webContents, 
+
+Adblock.onBeforeReady(
+  win.webContents, 
+
   (blocker) => {
     blocker.onBeforeRequest({ urls: ['http://*/*', 'https://*/*'] },
         ({ url, resourceType }, cb) => {
@@ -384,10 +405,71 @@ Adblock.onBeforeReady(win.webContents,
             return cb({})
         }
     )
+
 })
+
+```
+<br>
+
+## `setWindowOpenHandler(()=>{})`
+
+Adblock-Electron dynamically exposes its `setWindowOpenHandler(()=>{})` method on the Adblock global object. This provides consumer-managed access to Electron's window-opening handler.
+
+❗ `setWindowOpenHandler(()={})` is only available when the Adblock class is instantiated with `withWindowOpenHandler: true`.
+
+The exposed method accepts an `openWindow(Boolean)` callback:
+
+<br>
+
+- `openWindow(true)` — allows window creation (`{ action: "allow" }`)
+- `openWindow(false)` — denies window creation (`{ action: "deny" }`)
+
+<br>
+
+The consumer has full control over the window-opening decision and can use `blocker.match(url)`, direct string comparisons, referrer validation, or any combination of custom conditions.
+The consumer can therefore implement their own window-opening policies without relying on Adblock's URL matching.
+
+<br>
+
+---
+
+Using Adblock's matching engine
+
+```js
+
+Adblock.setWindowOpenHandler(
+  win.webContents,
+
+    (blocker, { url }) => {
+        blocker.openWindow(
+          !blocker.match(url) // match returns true !match(url)
+        ) 
+    }
+
+)
+
 ```
 
-Next is Electron's `setWindowOpenHandler({...})` which is exposed to the consumer on the Adblock Object when setting `withWindowOpenHandler: true` for the Adblock class instance. Adblock's implementation sets `setWindowOpenHandler({...})` directly on the global Adblock singleton Object and uses 
-`webContents.id`
+<br>
 
-❗ Electron's Adblock bound `setWindowOpenHandler(()=>{})` can only be registered after `createAdblock({ withWindowOpenHandler: true })` is called.
+---
+
+Using custom conditions
+
+```js
+
+Adblock.setWindowOpenHandler(
+    win.webContents,
+
+    (blocker, { url, referrer, id }) => {
+
+        blocker.openWindow(
+            url === myURL &&
+            referrer === mySafeReferrer
+        )
+
+    }
+)
+
+```
+---
