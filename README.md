@@ -157,8 +157,51 @@ The Adblock `tsurlfilter` engine must be initialized before Adblock instantiatio
 
 <br>
 
----
+<details> 
+<summary>Supported language codes</summary> 
 
+Codes come from the `languages` field of AdTidy's `filters.json` (non-deprecated filters, Nov 2026) and may change.
+
+| Code | Language | Code | Language |
+|---|---|---|---|
+| `ar` | Arabic | `ko` | Korean |
+| `bg` | Bulgarian | `lt` | Lithuanian |
+| `cs` | Czech | `lv` | Latvian |
+| `da` | Danish | `mk` | Macedonian |
+| `de` | German | `nl` | Dutch |
+| `es` | Spanish | `no` | Norwegian |
+| `et` | Estonian | `pl` | Polish |
+| `fa` | Persian | `ps` | Pashto |
+| `fi` | Finnish | `pt` | Portuguese |
+| `fo` | Faroese | `ru` | Russian |
+| `fr` | French | `sk` | Slovak |
+| `he` | Hebrew | `sr` | Serbian |
+| `hi` | Hindi | `sv` | Swedish |
+| `hr` | Croatian | `tg` | Tajik |
+| `hu` | Hungarian | `th` | Thai |
+| `id` | Indonesian | `tr` | Turkish |
+| `is` | Icelandic | `uk` | Ukrainian |
+| `it` | Italian | `vi` | Vietnamese |
+| `ja` | Japanese | `zh` | Chinese |
+
+</details>
+
+<details>
+<summary>Supported filter groups</summary>
+
+Group names are case-insensitive. An invalid name throws an error listing the supported values.
+
+| Group | Description |
+|---|---|
+| `AdBlocking` | Blocks ads |
+| `Privacy` | Blocks trackers |
+| `SocialWidgets` | Blocks social media elements, such as Like and Share buttons |
+| `Annoyances` | Blocks cookie notices, in-page popups and similar |
+| `Security` | Blocks phishing and malicious websites |
+| `Other` | Miscellaneous filters that fit no other group |
+| `Language` | Language-specific filters, selected by `withLanguageSpecific` |
+
+</details>
 <br>
 
 Calling `setResources()` without arguments enables all filter groups and uses English as the language-specific filter selection.
@@ -194,10 +237,11 @@ On subsequent runs `withBuildSync: true` will build the engine synchronously bef
 
 ```js
 Adblock.setResources({
-    withBuildSync: true, 
+    withBuildSync: true,
     withGroups: [
-        "AdBlocking",
-        "Annoyances",
+        "AdBlocking",  // group names are case-insensitive
+        "Annoyances",  // ✓ valid
+        // "Annoyance" // ✗ invalid: throws and lists the supported group names
         "Security",
         "Language"
     ]
@@ -206,14 +250,71 @@ Adblock.setResources({
 
 With `withBuildSync: false` (default), the engine builds asynchronously and `createReady` is emitted when it’s ready. 
 <br>
-<br>
 
 ## ⚡ Creating Adblock Instance
 
+The Adblock class can be instantiated once the `createReady()` event has fired.<br> 
+If `createReady()` has not been registered `isReady()` can be called returning `true` if ready or `false` if the event is pending.
 
+```js
+if (Adblock.isReady()) {
+    // Engine ready
+    // createAdblock({...})
+} else {
+    Adblock.createReady(() => {
+        // Listener for engine ready state event
+        // createAdblock({...})
+    })
+}
+```
 
+### ⚙️ Options
 
+- Instance lookup id `webContents` Mandatory
+- Setting `withBeforeRequest: true` registers `onBeforeReady` on the Adblock Object
+- Setting `withWindowOpenHandler` registers `setWindowOpenHandler` on the Adblock Object
 
+<details>
+<summary>createAdblock options</summary>
 
+| Name | Type | Default | Description |
+|---|---|---|---|
+| `webContents` | `Electron.WebContents` | - | Target to attach to |
+| `withBeforeRequest` | `boolean` | `false` | `true`: consumer owns `onBeforeRequest` via `onBeforeReady` |
+| `withWindowOpenHandler` | `boolean` | `false` | `true`: consumer decides window opens via `setWindowOpenHandler` |
+| `withAllowIncludesArray` | `string[]` | `[]` | URL substrings exempted from blocking. Block matches take precedence |
+| `withBlockIncludesArray` | `string[]` | `['devtools', 'devtool']` | URL substrings always blocked |
+| `withAutoAttachFilter` | `Object[]` | `workers` | Attachment types excluded from cosmetic filters |
+| `withDebuggerResume` | `boolean` | `true` | Auto-resume debugger-paused targets |
+| `withConsole` | `boolean` | `false` | Diagnostic console output |
 
+</details>
 
+<br>
+
+Instantiating Adblock with `createAdblock` on `createReady` event
+
+```js
+  Adblock.createReady(() => 
+      Adblock.createAdblock({
+          webContents: window.webContents
+      })
+  )
+
+    // default config passing webContents argument only
+    if (Adblock.isReady())
+        Adblock.createAdblock({
+            webContents: window.webContents,
+            withAllowIncludesArray: [],
+            withBlockIncludesArray: ["devtools", "devtool"],
+            withBeforeRequest: false,
+            withWindowOpenHandler: false,
+            withDebuggerResume: true,
+            withAutoAttachFilter:  [
+            { type: "service_worker", exclude: true },
+            { type: "shared_worker", exclude: true },
+            { type: "worker", exclude: true },
+            ],
+            withConsole: false
+        })
+```
