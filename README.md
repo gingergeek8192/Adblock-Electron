@@ -15,10 +15,10 @@ Network request blocking without claiming ownership of `onBeforeRequest(()=>{})`
 <br> Cosmetic filtering and script injection to sub_frames and main_frame with no cross-origin restrictions.<br>
 Built on AdGuard's powerful `tsurlfilter` engine. 
 
-Adblock-Electron updates every 12 hours by fetching from the fastest responder of the adtidy-filter-mirror. <br> 
-The [adtidy-filter-mirror](https://github.com/gingergeek8192/adtidy-filter-mirror) is maintained for Adblock-Electron's first-run and update redundancy, utilizing 4 hosts (AdTidy, GitHub, jsDelivr, GitLab) across 3 independent CDN networks `Qrator`, `Fastly` and `Cloudflare`.<br>
+Adblock-Electron updates every 12 hours by fetching from the fastest-responding of the adtidy-filter-mirror. <br> 
+The [adtidy-filter-mirror](https://github.com/gingergeek8192/adtidy-filter-mirror) is maintained for Adblock-Electron's first-run and update redundancy, utilizing four hosts (AdTidy, GitHub, jsDelivr, GitLab) across three independent CDN networks `Qrator`, `Fastly` and `Cloudflare`.<br>
 
-Additional third party filter list support is planned.<br> Results shown below using Adblock-Electron default configuration
+Additional third-party filter list support is planned.<br> Results shown below using Adblock-Electron default configuration
 
 ## Test Results  🖥️
 
@@ -50,7 +50,7 @@ Additional third party filter list support is planned.<br> Results shown below u
 
 - Adblock Test Logs 📋 🔥
 
-Adblock-Electron `withConsole` logs instance initialization events, lifecycle and per-frame cosmetic css/js filter injection. 
+Adblock-Electron `withConsole` logs instance initialization events, lifecycle and per-frame cosmetic CSS/JS filter injection. 
 
 <details>
 <summary>View Logs </summary>
@@ -153,11 +153,11 @@ Adblock-Electron `withConsole` logs instance initialization events, lifecycle an
 
 ## ⚡ API Introduction
 
-To filter network requests without taking ownership of key Electron event handlers Adblock-Electron binds handlers to the class instance. <br> Event handlers are then exposed to the consumer application **on** the Adblock Object...
+To filter network requests without taking ownership of key Electron event handlers, Adblock-Electron binds handlers to the class instance. <br> Event handlers are then exposed to the consumer application **on** the Adblock Object ...
 
 - `Adblock.setWindowOpenHandler({})`
 
-...or as a **callback** via a **listener registered** on the Adblock Object...
+...or as a **callback** via a **listener registered** on the Adblock Object ...
 
 - `Adblock.onBeforeReady(blocker => blocker.onBeforeRequest(()=>{}))`
 
@@ -176,9 +176,9 @@ The Adblock `tsurlfilter` engine must be initialized before Adblock instantiatio
 
 ### ⚙️ Options
 
-- Specific filter groupIds `withGroups` (default all groupIds), 
-- Language `withLanguageSpecific` (default English)
-- Mode Sync / Async `withBuildSync` (default Async)
+- Specific filter group IDs `withGroups` (default all groupIds), 
+- Language: `withLanguageSpecific` (default English)
+- Build mode: synchronous / asynchronous `withBuildSync` (default Async)
 
 <br>
 
@@ -230,14 +230,14 @@ Group names are case-insensitive. An invalid name throws an error listing the su
 </details>
 <br>
 
-Calling `setResources({})` without arguments defaults `withGroups` to all filter groups and `withLanguageSpecific` to English.
+Calling `setResources()` without arguments defaults `withGroups` to all filter groups and `withLanguageSpecific` to English.
 ```js
 
 Adblock.setResources() // without args builds with defaults as below
 
 Adblock.setResources({
     withBuildSync: false, // default async
-    withLanguageSpecific: "en", // default english
+    withLanguageSpecific: "en", // default English
     withGroups: [
         "AdBlocking",
         "Privacy",
@@ -261,8 +261,8 @@ Calling `setResources({})` at earliest opportunity is advised
 // })
 
 ```
-First run is non-blocking regardless of `withBuildSync` setting. <br>
-Adblock-Electron downloads and builds the engine asynchronously, `createReady` is triggered before filters are asynchronously cached. <br>
+On first run, initialization is non-blocking regardless of the `withBuildSync` setting. <br>
+Adblock-Electron downloads and builds the engine asynchronously. The `createReady` event fires before filter lists are cached asynchronously. <br>
 On subsequent runs `withBuildSync: true` will build the engine synchronously before the consumer window appears.
 
 ```js
@@ -331,31 +331,45 @@ What began as a solution to a specific problem evolved into an independent adblo
 
 Instantiating Adblock with `createAdblock({...})` on the `createReady(()=>{})` event:
 
-```js
+## Minimal configuration
 
+Supply the mandatory webContents argument and let Adblock-Electron apply its defaults.
+
+```js
+// Default config passing the mandatory webContents argument only ...
 Adblock.createReady(() => 
     Adblock.createAdblock({
         webContents: win.webContents
     })
 )
-
-// Default config passing the mandatory webContents argument only
-Adblock.createAdblock({
-    webContents: win.webContents,
-    withAllowIncludesArray: [],
-    withBlockIncludesArray: ["devtools", "devtool"], // blocks CDN anti-DevTools scripts, allowing DevTools inspection (e.g. streaming sites)
-    withBeforeRequest: false,
-    withWindowOpenHandler: false,
-    withDebuggerResume: true, // counteracts sites deliberately pausing execution when they detect DevTools (e.g. streaming sites)
-    withAutoAttachFilter: [ // stops Adblock-Electron targeting workers
-        { type: "service_worker", exclude: true },
-        { type: "shared_worker", exclude: true },
-        { type: "worker", exclude: true },
-    ],
-    withConsole: false
-})
-
 ```
+
+### The equivalent configuration with all defaults declared explicitly:
+
+```js
+Adblock.createReady(() =>
+    Adblock.createAdblock({
+        webContents: win.webContents,
+
+        withAllowIncludesArray: [],
+        withBlockIncludesArray: ["devtools", "devtool"],
+
+        withBeforeRequest: false,
+        withWindowOpenHandler: false,
+
+        withDebuggerResume: true, // Counteracts sites deliberately pausing execution when they detect DevTools (e.g. streaming sites).
+
+        withAutoAttachFilter: [ // Stops Adblock-Electron targeting workers.
+            { type: "service_worker", exclude: true },
+            { type: "shared_worker", exclude: true },
+            { type: "worker", exclude: true },
+        ],
+
+        withConsole: false
+    })
+)
+```
+
 <br>
 
 The Adblock class can be instantiated once the `createReady(()=>{})` event has fired.<br> 
@@ -415,9 +429,9 @@ Adblock.onBeforeReady(
 
 Adblock-Electron dynamically exposes its `setWindowOpenHandler(()=>{})` method on the Adblock global object. This provides consumer-managed access to Electron's window-opening handler.
 
-❗ `setWindowOpenHandler(()={})` is only available when the Adblock class is instantiated with `withWindowOpenHandler: true`.
+❗ `setWindowOpenHandler(()=>{})` is only available when the Adblock class is instantiated with `withWindowOpenHandler: true`.
 
-The exposed method accepts an `openWindow(Boolean)` callback:
+The callback receives an `openWindow(boolean)` method for setting the window-opening decision:
 
 <br>
 
@@ -442,7 +456,7 @@ Adblock.setWindowOpenHandler(
 
     (blocker, { url }) => {
         blocker.openWindow(
-          !blocker.match(url) // match returns true !match(url)
+          !blocker.match(url) // match() returns true when the URL is blocked
         ) 
     }
 
@@ -461,7 +475,7 @@ Using custom conditions
 Adblock.setWindowOpenHandler(
     win.webContents,
 
-    (blocker, { url, referrer, id }) => {
+    (blocker, { url, referrer }) => {
 
         blocker.openWindow(
             url === myURL &&
@@ -478,7 +492,7 @@ Adblock.setWindowOpenHandler(
 
 ## `urlReady(()=>{})` 🚀
 
-The last event to fire is `urlReady` at this point, were about to block some ads 🚫
+The last event to fire is `urlReady(()=>{})`; at this point, we're about to block some ads 🚫
 
 ```js
 
