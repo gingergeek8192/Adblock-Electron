@@ -277,14 +277,13 @@ Adblock.setResources({
 
 With `withBuildSync: false` (default), the engine builds asynchronously and `createReady` is emitted when it is ready. 
 <br>
-
 ## ⚡ Creating Adblock Instance
 
 ### ⚙️ Options
 
-- Mandatory `webContents`  instance lookup (webContents.id) 
+- Mandatory `webContents` instance (looked up via `webContents.id`)
 - Setting `withBeforeRequest: true` registers `onBeforeReady` on the Adblock Object
-- Setting `withWindowOpenHandler` registers `setWindowOpenHandler` on the Adblock Object
+- Setting `withWindowOpenHandler: true` registers `setWindowOpenHandler` on the Adblock Object
 
 <br>
 
@@ -296,11 +295,11 @@ With `withBuildSync: false` (default), the engine builds asynchronously and `cre
 | `webContents` | `Electron.WebContents` | - | Target to attach to |
 | `withBeforeRequest` | `boolean` | `false` | `true`: consumer owns `onBeforeRequest` via `onBeforeReady` |
 | `withWindowOpenHandler` | `boolean` | `false` | `true`: consumer decides window opens via `setWindowOpenHandler` |
-| `withAllowIncludesArray` | `string[]` | `[]` | URL substrings exempted from blocking. Block matches take precedence |
-| `withBlockIncludesArray` | `string[]` | `['devtools', 'devtool']` | URL substrings always blocked |
-| `withAutoAttachFilter` | `Object[]` | `workers` | Attachment types excluded from cosmetic filters |
-| `withDebuggerResume` | `boolean` | `true` | Auto-resume debugger-paused targets |
-| `withConsole` | `boolean` | `false` | Diagnostic console output |
+| `withAllowIncludesArray` | `string[]` | `[]` | URL substrings exempted from blocking. Block matches take precedence. |
+| `withBlockIncludesArray` | `string[]` | `['devtools', 'devtool']` | URL substrings always blocked. |
+| `withAutoAttachFilter` | `Object[]` | `workers` | Attachment types excluded from interception. Defaults to `service_worker`, `shared_worker`, and `worker`. |
+| `withDebuggerResume` | `boolean` | `true` | Auto-resume debugger-paused targets. Enabled by default. |
+| `withConsole` | `boolean` | `false` | Diagnostic console output. |
 
 <br>
 
@@ -311,35 +310,41 @@ Many streaming sites employ techniques intended to interfere with developer tool
 Adblock-Electron incorporates mechanisms to counteract this interference, including automatic debugger resumption, protection against console clearing, and targeted blocking of DevTools-related scripts and requests.<br>
 These requirements directly influenced several of the available configuration options, particularly `withBlockIncludesArray` and `withDebuggerResume`. The related `withAutoAttachFilter` option was also shaped by these requirements to ensure the package targets the correct frame types.<br>
 What began as a solution to a specific problem evolved into an independent adblocking implementation for Electron, with network filtering, cross-origin cosmetic filtering, and script injection.
+
 </details>
 
 <br>
 
-Instantiating Adblock with `createAdblock({...})` on `createReady(()=>{})` event
+The Adblock class can be instantiated once the `createReady()` event has fired.  
+If `createReady()` has not been registered, `isReady()` can be called. It returns `true` if the engine is ready, or `false` if the event is pending.
+
+Instantiating Adblock with `createAdblock({...})` on the `createReady(()=>{})` event:
 
 ```js
-  Adblock.createReady(() => 
-      Adblock.createAdblock({
-          webContents: window.webContents
-      })
-  )
-
-    // default config passing mandatory webContents argument only
+Adblock.createReady(() => 
     Adblock.createAdblock({
-        webContents: window.webContents,
-        withAllowIncludesArray: [],
-        withBlockIncludesArray: ["devtools", "devtool"], // blocks CDN anti dev-tools scripts allows dev-tools inspection i.e streaming sites 
-        withBeforeRequest: false,
-        withWindowOpenHandler: false,
-        withDebuggerResume: true, // counteracts sites deliberately pausing execution when they detect dev tools i.e streaming sites
-        withAutoAttachFilter:  [ // stops Adblock-Electron targeting workers
+        webContents: win.webContents
+    })
+)
+
+// Default config passing the mandatory webContents argument only
+Adblock.createAdblock({
+    webContents: win.webContents,
+    withAllowIncludesArray: [],
+    withBlockIncludesArray: ["devtools", "devtool"], // blocks CDN anti-DevTools scripts, allowing DevTools inspection (e.g. streaming sites)
+    withBeforeRequest: false,
+    withWindowOpenHandler: false,
+    withDebuggerResume: true, // counteracts sites deliberately pausing execution when they detect DevTools (e.g. streaming sites)
+    withAutoAttachFilter: [ // stops Adblock-Electron targeting workers
         { type: "service_worker", exclude: true },
         { type: "shared_worker", exclude: true },
         { type: "worker", exclude: true },
-        ],
-        withConsole: false
-    })
+    ],
+    withConsole: false
+})
+
 ```
+<br>
 
 The Adblock class can be instantiated once the `createReady()` event has fired.<br> 
 If `createReady()` has not been registered, `isReady()` can be called. It returns `true` if the engine is ready, or `false` if the event is pending.
@@ -355,3 +360,30 @@ if (Adblock.isReady()) {
     })
 }
 ``` 
+<br>
+
+Instantiating the Adblock class setting `withBeforeRequest: true` binds Electron's `onBeforeRequest` listener to the Adblock class instance and the `onBeforeReady(()=>{})` event listener is made available to the consumer on the Adblock Object.
+The registered event listener fires and passes `onBeforeRequest` to the consumer as a callback.
+
+❗ Adblock's `onBeforeReady(()=>{})` can only be registered after `createReady()` has fired and `createAdblock({ withBeforeRequest: true })` is called.
+
+```js
+Adblock.onBeforeReady(win.webContents, 
+  (blocker) => {
+    blocker.onBeforeRequest({ urls: ['http://*/*', 'https://*/*'] },
+        ({ url, resourceType }, cb) => {
+
+            // app-specific priority logic 
+            // if (myPriorityCheck(url)) { return cb({...}) }
+
+            if (blocker.match(url, resourceType)) 
+                return cb({ cancel: true })
+
+            // app-specific logic on filtered requests
+            // if (mySecondaryCheck(url)) { return cb({...}) }
+
+            return cb({})
+        }
+    )
+})
+```
