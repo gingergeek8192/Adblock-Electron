@@ -16,7 +16,7 @@ Network request blocking without claiming ownership of `onBeforeRequest` or `set
 Built on AdGuard's powerful `tsurlfilter` engine. 
 
 Adblock-Electron updates every 12 hours fetching from the fastest responder of the adtidy-filter-mirror. <br> 
-The [adtidy-filter-mirror](https://github.com/gingergeek8192/adtidy-filter-mirror) is  maintained for Adblock-Electron first run and update redundancy.<br> With 4 hosts (AdTidy, GitHub, jsDelivr, GitLab) across 3 independent CDN networks `Qrator`, `Fastly` and `Cloudflare`.<br>
+The [adtidy-filter-mirror](https://github.com/gingergeek8192/adtidy-filter-mirror) is  maintained for Adblock-Electron first run and update redundancy with 4 hosts (AdTidy, GitHub, jsDelivr, GitLab) across 3 independent CDN networks `Qrator`, `Fastly` and `Cloudflare`.<br>
 
 
 ## Test Results
@@ -190,7 +190,7 @@ Calling `setResources` at earliest opportunity is advised
 
 // })
 ```
-First run is non-blocking regardless of `withBuildSync` setting. </br>
+First run is non-blocking regardless of `withBuildSync` setting. <br>
 Adblock-electron downloads and builds the engine asynchronously, `createReady` is triggered before filters are asynchronously cached. <br>
 On subsequent runs `withBuildSync:true` will build the engine synchronously before the consumer window appears.
 
@@ -206,7 +206,7 @@ Adblock.setResources({
 })
 ```
 
-The `withBuildSync:false` (default) the engine builds async and `createReady` is emitted when the engine is ready for use. 
+With `withBuildSync:false` (default), the engine builds asynchronously and createReady is emitted when it’s ready. 
 <br>
 <br>
 
