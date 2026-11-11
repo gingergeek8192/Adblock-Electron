@@ -15,10 +15,10 @@ Network request blocking without claiming ownership of `onBeforeRequest` or `set
 <br> Cosmetic filtering and script injection to sub_frames and main_frame with no cross-origin restrictions.<br>
 Built on AdGuard's powerful `tsurlfilter` engine. 
 
-Adblock-Electron updates every 12 hours fetching from the fastest responder of the adtidy-filter-mirror. <br> 
-The [adtidy-filter-mirror](https://github.com/gingergeek8192/adtidy-filter-mirror) is  maintained for Adblock-Electron first run and update redundancy with 4 hosts (AdTidy, GitHub, jsDelivr, GitLab) across 3 independent CDN networks `Qrator`, `Fastly` and `Cloudflare`.<br>
+Adblock-Electron updates every 12 hours by fetching from the fastest responder of the adtidy-filter-mirror. <br> 
+The [adtidy-filter-mirror](https://github.com/gingergeek8192/adtidy-filter-mirror) is maintained for Adblock-Electron's first-run and update redundancy, utilizing 4 hosts (AdTidy, GitHub, jsDelivr, GitLab) across 3 independent CDN networks `Qrator`, `Fastly` and `Cloudflare`.<br>
 
-Additional third party filter list support is planned.<br> Results shown below using Adblock-electron default configuration
+Additional third party filter list support is planned.<br> Results shown below using Adblock-Electron default configuration
 
 
 ## Test Results  🖥️
@@ -231,7 +231,7 @@ Group names are case-insensitive. An invalid name throws an error listing the su
 </details>
 <br>
 
-Calling `setResources()` without arguments enables all filter groups and uses English as the language-specific filter selection.
+Calling `setResources()` without arguments defaults `withGroups` to all filter groups and `withLanguageSpecific` to English.
 ```js
 Adblock.setResources() // without args builds with defaults as below
 
@@ -275,13 +275,13 @@ Adblock.setResources({
 })
 ```
 
-With `withBuildSync: false` (default), the engine builds asynchronously and `createReady` is emitted when it’s ready. 
+With `withBuildSync: false` (default), the engine builds asynchronously and `createReady` is emitted when it is ready. 
 <br>
 
 ## ⚡ Creating Adblock Instance
 
 The Adblock class can be instantiated once the `createReady()` event has fired.<br> 
-If `createReady()` has not been registered `isReady()` can be called returning `true` (engine ready) ready or `false` if the event is pending.
+If `createReady()` has not been registered, `isReady()` can be called. It returns `true` if the engine is ready, or `false` if the event is pending.
 
 ```js
 if (Adblock.isReady()) {
@@ -321,12 +321,11 @@ if (Adblock.isReady()) {
 
 <h2>Evolution of createAdblock options</h2>
 
-Adblock-Electron originated from a practical requirement: removing advertising, trackers and intrusive pop-ups from streaming sites while providing the ability to inspect their source.<br>
-Many streaming sites employ techniques intended to interfere with developer tools, including debugger traps, execution pauses, console manipulation and scripts designed to detect DevTools activity.<br>
-Adblock-Electron incorporates mechanisms to counteract this interference, including automatic debugger resumption, protection against console clearing and targeted blocking of DevTools-related scripts and requests.<br>
-These requirements directly influenced several of the available configuration options, particularly `withBlockIncludesArray`, `withDebuggerResume` and `withAutoAttachFilter`.<br>
-What began as a solution to a specific problem evolved into an independent adblocking implementation for Electron, with network filtering, cross-origin cosmetic filtering and script injection.
-
+Adblock-Electron originated from a practical requirement: removing advertising, trackers, and intrusive pop-ups from streaming sites while providing the ability to inspect their source.<br>
+Many streaming sites employ techniques intended to interfere with developer tools, including debugger traps, execution pauses, console manipulation, and scripts designed to detect DevTools activity.<br>
+Adblock-Electron incorporates mechanisms to counteract this interference, including automatic debugger resumption, protection against console clearing, and targeted blocking of DevTools-related scripts and requests.<br>
+These requirements directly influenced several of the available configuration options, particularly `withBlockIncludesArray` and `withDebuggerResume`. The related `withAutoAttachFilter` option was also shaped by these requirements to ensure the package targets the correct frame types.<br>
+What began as a solution to a specific problem evolved into an independent adblocking implementation for Electron, with network filtering, cross-origin cosmetic filtering, and script injection.
 </details>
 
 <br>
