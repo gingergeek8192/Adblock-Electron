@@ -232,7 +232,7 @@ Calling `setResources` at earliest opportunity is advised
 // })
 ```
 First run is non-blocking regardless of `withBuildSync` setting. <br>
-Adblock-electron downloads and builds the engine asynchronously, `createReady` is triggered before filters are asynchronously cached. <br>
+Adblock-Electron downloads and builds the engine asynchronously, `createReady` is triggered before filters are asynchronously cached. <br>
 On subsequent runs `withBuildSync: true` will build the engine synchronously before the consumer window appears.
 
 ```js
@@ -254,7 +254,7 @@ With `withBuildSync: false` (default), the engine builds asynchronously and `cre
 ## ⚡ Creating Adblock Instance
 
 The Adblock class can be instantiated once the `createReady()` event has fired.<br> 
-If `createReady()` has not been registered `isReady()` can be called returning `true` if ready or `false` if the event is pending.
+If `createReady()` has not been registered `isReady()` can be called returning `true` (engine ready) ready or `false` if the event is pending.
 
 ```js
 if (Adblock.isReady()) {
@@ -270,7 +270,7 @@ if (Adblock.isReady()) {
 
 ### ⚙️ Options
 
-- Instance lookup id `webContents` Mandatory
+- Mandatory `webContents`  instance lookup (webContents.id) 
 - Setting `withBeforeRequest: true` registers `onBeforeReady` on the Adblock Object
 - Setting `withWindowOpenHandler` registers `setWindowOpenHandler` on the Adblock Object
 
@@ -301,7 +301,7 @@ Instantiating Adblock with `createAdblock` on `createReady` event
       })
   )
 
-    // default config passing webContents argument only
+    // default config passing mandatory webContents argument only
     if (Adblock.isReady())
         Adblock.createAdblock({
             webContents: window.webContents,
