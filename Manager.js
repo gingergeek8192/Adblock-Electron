@@ -199,7 +199,7 @@ const Manager = {
         _sessionLog(isMain, autoAttach, sessionId, r) {
             if (!this.withConsole || !this[sessionId]?.Protocols) return
             this._log(
-                `CDP SESSION ${isMain ? 'MAIN_FRAME' : 'SUB_FRAME'} CAPABILITY`,
+                `${isMain ? 'MAIN_FRAME' : 'SUB_FRAME'} CAPABILITY`,
                 {
                     sessionId,
                     Capability: r ? 'fullSet' : 'subSet',
