@@ -2,9 +2,9 @@
 
 An Electron adblocking package built on AdGuard's `tsurlfilter` engine.
 
-- **No Preload Scripts.** 
 - **No IPC.**
-- **No Forced Ownership of Electron Event Handlers.** 
+- **No Preload.** 
+- **No Hogging Electron Event Handlers.** 
 - **Full Cross-Origin and Same-Origin Cosmetic Filtering.**
 
 <br>
