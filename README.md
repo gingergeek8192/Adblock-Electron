@@ -18,19 +18,40 @@ Built on AdGuard's powerful `tsurlfilter` engine.
 Adblock-Electron updates every 12 hours fetching from the fastest responder of the adtidy-filter-mirror. <br> 
 The [adtidy-filter-mirror](https://github.com/gingergeek8192/adtidy-filter-mirror) is  maintained for Adblock-Electron first run and update redundancy with 4 hosts (AdTidy, GitHub, jsDelivr, GitLab) across 3 independent CDN networks `Qrator`, `Fastly` and `Cloudflare`.<br>
 
-
-## Test Results
-- Test Site Screenshots 🖥️
-
-<p>
-<a href="https://raw.githubusercontent.com/gingergeek8192/Adblock-Electron/main/docs/Ad-Blocker-Test.png"><img src="https://raw.githubusercontent.com/gingergeek8192/Adblock-Electron/main/docs/Ad-Blocker-Test.png" width="280" height="160"></a>
-<a href="https://raw.githubusercontent.com/gingergeek8192/Adblock-Electron/main/docs/Blockify.png"><img src="https://raw.githubusercontent.com/gingergeek8192/Adblock-Electron/main/docs/Blockify.png" width="280" height="160"></a>
-<a href="https://raw.githubusercontent.com/gingergeek8192/Adblock-Electron/main/docs/OBFUSCATED.png"><img src="https://raw.githubusercontent.com/gingergeek8192/Adblock-Electron/main/docs/OBFUSCATED.png" width="280" height="160"></a>
-<a href="https://raw.githubusercontent.com/gingergeek8192/Adblock-Electron/main/docs/SUPER-ADBLOCK-TEST.png"><img src="https://raw.githubusercontent.com/gingergeek8192/Adblock-Electron/main/docs/SUPER-ADBLOCK-TEST.png" width="280" height="160"></a>
-</p>
+Additional third party filter list support is planned.<br> Results shown below using Adblock-electron default configuration
 
 
-- Adblock Test Logs 📋
+## Test Results  🖥️
+
+<table>
+<tr>
+<td align="center">Ad Blocker Test</td>
+<td align="center">Blockify</td>
+<td align="center">Obfuscated</td>
+<td align="center">Super Adblock Test</td>
+</tr>
+<tr>
+<td align="center"><a href="https://raw.githubusercontent.com/gingergeek8192/Adblock-Electron/main/docs/Ad-Blocker-Test.png"><img src="https://raw.githubusercontent.com/gingergeek8192/Adblock-Electron/main/docs/Ad-Blocker-Test.png" width="280" height="160"></a></td>
+<td align="center"><a href="https://raw.githubusercontent.com/gingergeek8192/Adblock-Electron/main/docs/Blockify.png"><img src="https://raw.githubusercontent.com/gingergeek8192/Adblock-Electron/main/docs/Blockify.png" width="280" height="160"></a></td>
+<td align="center"><a href="https://raw.githubusercontent.com/gingergeek8192/Adblock-Electron/main/docs/OBFUSCATED.png"><img src="https://raw.githubusercontent.com/gingergeek8192/Adblock-Electron/main/docs/OBFUSCATED.png" width="280" height="160"></a></td>
+<td align="center"><a href="https://raw.githubusercontent.com/gingergeek8192/Adblock-Electron/main/docs/SUPER-ADBLOCK-TEST.png"><img src="https://raw.githubusercontent.com/gingergeek8192/Adblock-Electron/main/docs/SUPER-ADBLOCK-TEST.png" width="280" height="160"></a></td>
+</tr>
+<tr>
+<td align="center">100% Blocked 130/130</td>
+<td align="center">97% Blocked 58/60</td>
+<td align="center">94% Blocked 251/267</td>
+<td align="center">90% Blocked 440/482</td>
+</tr>
+</table>
+
+
+---
+
+<br> <br>
+
+- Adblock Test Logs 📋 🔥
+
+Adblock-Electron `withConsole` logs instance initialization events, lifecycle and per-frame cosmetic css/js filter injection. 
 
 <details>
 <summary>View Logs </summary>
@@ -45,7 +66,7 @@ The [adtidy-filter-mirror](https://github.com/gingergeek8192/adtidy-filter-mirro
 }
 ────────────────────────────────────────────────────────────────────────
 ────────────────────────────────────────────────────────────────────────
-  CDP SESSION MAIN_FRAME CAPABILITY
+  MAIN_FRAME CAPABILITY
 ────────────────────────────────────────────────────────────────────────
 {
   sessionId: 'main',
@@ -86,7 +107,7 @@ The [adtidy-filter-mirror](https://github.com/gingergeek8192/adtidy-filter-mirro
 }
 ────────────────────────────────────────────────────────────────────────
 ────────────────────────────────────────────────────────────────────────
-  CDP SESSION SUB_FRAME CAPABILITY
+  SUB_FRAME CAPABILITY
 ────────────────────────────────────────────────────────────────────────
 {
   sessionId: 'D13136189FFB8591666C43A02A8562C3',
@@ -156,6 +177,7 @@ The Adblock `tsurlfilter` engine must be initialized before Adblock instantiatio
 - Mode Sync / Async `withBuildSync` (default Async)
 
 <br>
+
 
 <details> 
 <summary>Supported language codes</summary> 
@@ -318,3 +340,4 @@ Instantiating Adblock with `createAdblock` on `createReady` event
             withConsole: false
         })
 ```
+🚨❗🚨❗
