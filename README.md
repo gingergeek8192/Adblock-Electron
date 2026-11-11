@@ -280,21 +280,6 @@ With `withBuildSync: false` (default), the engine builds asynchronously and `cre
 
 ## ⚡ Creating Adblock Instance
 
-The Adblock class can be instantiated once the `createReady()` event has fired.<br> 
-If `createReady()` has not been registered, `isReady()` can be called. It returns `true` if the engine is ready, or `false` if the event is pending.
-
-```js
-if (Adblock.isReady()) {
-    // Engine ready
-    // createAdblock({...})
-} else {
-    Adblock.createReady(() => {
-        // Listener for engine ready state event
-        // createAdblock({...})
-    })
-}
-``` 
-
 ### ⚙️ Options
 
 - Mandatory `webContents`  instance lookup (webContents.id) 
@@ -356,3 +341,17 @@ Instantiating Adblock with `createAdblock({...})` on `createReady(()=>{})` event
     })
 ```
 
+The Adblock class can be instantiated once the `createReady()` event has fired.<br> 
+If `createReady()` has not been registered, `isReady()` can be called. It returns `true` if the engine is ready, or `false` if the event is pending.
+
+```js
+if (Adblock.isReady()) {
+    // Engine ready
+    // createAdblock({...})
+} else {
+    Adblock.createReady(() => {
+        // Listener for engine ready state event
+        // createAdblock({...})
+    })
+}
+``` 
