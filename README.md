@@ -36,8 +36,6 @@ The [adtidy-filter-mirror](https://github.com/gingergeek8192/adtidy-filter-mirro
 <summary>View Logs </summary>
 
 ```js
-Adblock Ready
-adblock-create-ready
 ────────────────────────────────────────────────────────────────────────
   HANDLER INITIALIZATION
 ────────────────────────────────────────────────────────────────────────
