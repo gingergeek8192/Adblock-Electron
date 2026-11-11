@@ -473,3 +473,22 @@ Adblock.setWindowOpenHandler(
 
 ```
 ---
+
+<br>
+
+## `urlReady(()=>{})` 🚀
+
+The last event to fire is `urlReady` at this point, were about to block 🚫 some ads 
+
+```js
+
+  Adblock.urlReady(win.webContents, () => 
+
+    win.webContents.loadURL(url)
+      .then(() => win.webContents.openDevTools())
+      .catch(() => {});
+
+  );
+
+```
+
