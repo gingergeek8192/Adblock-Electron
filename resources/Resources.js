@@ -632,7 +632,7 @@ const Resources = Object.assign(
             version: '1.0.0',
             verbose: false
         });
-        
+        if (!this.paths.length) hotUpdateOverride = 'createAsync'
         return Engine[hotUpdateOverride ?? (this.modeSync ? 'createSync' : 'createAsync')]({
              filters:[...this.listMap.entries()]
             .map(([k,v]) => {
