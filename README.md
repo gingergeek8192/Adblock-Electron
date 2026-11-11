@@ -154,7 +154,11 @@ Adblock-Electron `withConsole` logs instance initialization events, lifecycle an
 
 ## ⚡ API Introduction
 
-To filter network requests without taking ownership of key Electron event handlers, Adblock-Electron binds handlers to the class instance. <br> Event handlers are then exposed to the consumer application **on** the Adblock Object ...
+To filter network requests without taking ownership of key Electron event handlers, Adblock-Electron binds handlers to the class instance. 
+
+<br> 
+
+Event handlers are then exposed to the consumer application **on** the Adblock Object ...
 
 - `Adblock.setWindowOpenHandler({})`
 
@@ -162,12 +166,18 @@ To filter network requests without taking ownership of key Electron event handle
 
 - `Adblock.onBeforeReady(blocker => blocker.onBeforeRequest(()=>{}))`
 
-The availability of event handlers depends on the configuration specified during `createAdblock({...})` instantiation and the lifecycle of the class instance.<br>
-Adblock-Electron's initialization API is therefore primarily event-driven. <br>
+The availability of event handlers depends on the configuration specified during `createAdblock({...})` instantiation and the lifecycle of the class instance.
+
+<br>
+
+Adblock-Electron's initialization API is therefore primarily event-driven. 
+
 <br>
 
 
 ❗ **Event-driven:** `setResources({})` → `createReady(()=>{})` → `createAdblock({})` → `onBeforeReady(()=>{})` → `setWindowOpenHandler(()=>{})` → `urlReady(()=>{})`
+
+<br>
 
 The Adblock `tsurlfilter` engine must be initialized before Adblock instantiation.
 
