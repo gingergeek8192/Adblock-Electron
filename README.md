@@ -37,10 +37,10 @@ Additional third party filter list support is planned.<br> Results shown below u
 <td align="center"><a href="https://raw.githubusercontent.com/gingergeek8192/Adblock-Electron/main/docs/SUPER-ADBLOCK-TEST.png"><img src="https://raw.githubusercontent.com/gingergeek8192/Adblock-Electron/main/docs/SUPER-ADBLOCK-TEST.png" width="280" height="160"></a></td>
 </tr>
 <tr>
-<td align="center">100% Blocked 130/130</td>
-<td align="center">97% Blocked 58/60</td>
-<td align="center">94% Blocked 251/267</td>
-<td align="center">90% Blocked 440/482</td>
+<td align="center">100% 130/130</td>
+<td align="center">97% 58/60</td>
+<td align="center">94% 251/267</td>
+<td align="center">90% 440/482</td>
 </tr>
 </table>
 
