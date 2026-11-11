@@ -20,7 +20,6 @@ The [adtidy-filter-mirror](https://github.com/gingergeek8192/adtidy-filter-mirro
 
 Additional third party filter list support is planned.<br> Results shown below using Adblock-Electron default configuration
 
-
 ## Test Results  🖥️
 
 <table>
