@@ -176,7 +176,7 @@ Adblock.setResources({
         "Security",
         "Other",
         "Language"
-    ] // all filter list groupIds included
+    ] // default all filter list groupIds included
 })
 ```
 Calling `setResources` at earliest opportunity is advised
