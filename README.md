@@ -387,3 +387,8 @@ Adblock.onBeforeReady(win.webContents,
     )
 })
 ```
+
+Next is Electron's `setWindowOpenHandler({...})` which is exposed to the consumer on the Adblock Object when setting `withWindowOpenHandler: true` for the Adblock class instance. Adblock's implementation sets `setWindowOpenHandler({...})` directly on the global Adblock singleton Object and uses 
+`webContents.id`
+
+❗ Electron's Adblock bound `setWindowOpenHandler(()=>{})` can only be registered after `createAdblock({ withWindowOpenHandler: true })` is called.
