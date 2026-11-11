@@ -145,11 +145,11 @@ To filter network requests without taking ownership of key Electron event handle
 
 The availability of event handlers depends on the configuration specified during instantiation and the lifecycle of the class instance.<br>
 Adblock-Electron's initialization API is therefore primarily event-driven. <br>
-The Adblock `tsUrlFilters` engine must be initialized before Adblock instantiation.
+The Adblock `tsurlfilter` engine must be initialized before Adblock instantiation.
 
 <br>
 
-## Initialize `tsUrlFilters` Adblock-Engine 
+## Initialize `tsurlfilter` Adblock-Engine 
 
 ### ⚙️ Options
 
