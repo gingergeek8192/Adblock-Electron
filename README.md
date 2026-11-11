@@ -176,11 +176,8 @@ Adblock-Electron's initialization API is therefore primarily event-driven.
 
 
 ❗ **Event-driven:** `setResources({})` → `createReady(()=>{})` → `createAdblock({})` → `onBeforeReady(()=>{})` → `setWindowOpenHandler(()=>{})` → `urlReady(()=>{})`
-
 <br>
-
 The Adblock `tsurlfilter` engine must be initialized before Adblock instantiation.
-
 <br>
 
 ## Initialize `tsurlfilter` Adblock-Engine `setResources({})`
