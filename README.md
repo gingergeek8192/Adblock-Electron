@@ -162,8 +162,13 @@ To filter network requests without taking ownership of key Electron event handle
 
 - `Adblock.onBeforeReady(blocker => blocker.onBeforeRequest({}))`
 
-The availability of event handlers depends on the configuration specified during instantiation and the lifecycle of the class instance.<br>
+The availability of event handlers depends on the configuration specified during `createAdblock({...})` instantiation and the lifecycle of the class instance.<br>
 Adblock-Electron's initialization API is therefore primarily event-driven. <br>
+<br>
+
+
+❗ **Event-driven:** `setResources({...})` → `createReady(()=>{})` → `createAdblock({...})` → `onBeforeReady(()=>{})` → `setWindowOpenHandler(()=>{})` → `urlReady(()=>{})`
+
 The Adblock `tsurlfilter` engine must be initialized before Adblock instantiation.
 
 <br>
@@ -288,7 +293,7 @@ if (Adblock.isReady()) {
         // createAdblock({...})
     })
 }
-```
+``` 
 
 ### ⚙️ Options
 
@@ -296,8 +301,10 @@ if (Adblock.isReady()) {
 - Setting `withBeforeRequest: true` registers `onBeforeReady` on the Adblock Object
 - Setting `withWindowOpenHandler` registers `setWindowOpenHandler` on the Adblock Object
 
+<br>
+
 <details>
-<summary>createAdblock options</summary>
+<summary>createAdblock options 📋</summary>
 
 | Name | Type | Default | Description |
 |---|---|---|---|
@@ -310,11 +317,21 @@ if (Adblock.isReady()) {
 | `withDebuggerResume` | `boolean` | `true` | Auto-resume debugger-paused targets |
 | `withConsole` | `boolean` | `false` | Diagnostic console output |
 
+<br>
+
+<h2>Evolution of createAdblock options</h2>
+
+Adblock-Electron originated from a practical requirement: removing advertising, trackers and intrusive pop-ups from streaming sites while providing the ability to inspect their source.<br>
+Many streaming sites employ techniques intended to interfere with developer tools, including debugger traps, execution pauses, console manipulation and scripts designed to detect DevTools activity.<br>
+Adblock-Electron incorporates mechanisms to counteract this interference, including automatic debugger resumption, protection against console clearing and targeted blocking of DevTools-related scripts and requests.<br>
+These requirements directly influenced several of the available configuration options, particularly `withBlockIncludesArray`, `withDebuggerResume` and `withAutoAttachFilter`.<br>
+What began as a solution to a specific problem evolved into an independent adblocking implementation for Electron, with network filtering, cross-origin cosmetic filtering and script injection.
+
 </details>
 
 <br>
 
-Instantiating Adblock with `createAdblock` on `createReady` event
+Instantiating Adblock with `createAdblock({...})` on `createReady(()=>{})` event
 
 ```js
   Adblock.createReady(() => 
@@ -324,20 +341,19 @@ Instantiating Adblock with `createAdblock` on `createReady` event
   )
 
     // default config passing mandatory webContents argument only
-    if (Adblock.isReady())
-        Adblock.createAdblock({
-            webContents: window.webContents,
-            withAllowIncludesArray: [],
-            withBlockIncludesArray: ["devtools", "devtool"],
-            withBeforeRequest: false,
-            withWindowOpenHandler: false,
-            withDebuggerResume: true,
-            withAutoAttachFilter:  [
-            { type: "service_worker", exclude: true },
-            { type: "shared_worker", exclude: true },
-            { type: "worker", exclude: true },
-            ],
-            withConsole: false
-        })
+    Adblock.createAdblock({
+        webContents: window.webContents,
+        withAllowIncludesArray: [],
+        withBlockIncludesArray: ["devtools", "devtool"], // blocks CDN anti dev-tools scripts allows dev-tools inspection i.e streaming sites 
+        withBeforeRequest: false,
+        withWindowOpenHandler: false,
+        withDebuggerResume: true, // counteracts sites deliberately pausing execution when they detect dev tools i.e streaming sites
+        withAutoAttachFilter:  [ // stops Adblock-Electron targeting workers
+        { type: "service_worker", exclude: true },
+        { type: "shared_worker", exclude: true },
+        { type: "worker", exclude: true },
+        ],
+        withConsole: false
+    })
 ```
-🚨❗🚨❗
+
