@@ -478,7 +478,7 @@ Adblock.setWindowOpenHandler(
 
 ## `urlReady(()=>{})` 🚀
 
-The last event to fire is `urlReady` at this point, were about to block 🚫 some ads 
+The last event to fire is `urlReady` at this point, were about to block some ads 🚫
 
 ```js
 
