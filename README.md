@@ -261,7 +261,16 @@ Adblock.setResources({
         "Security",
         "Other",
         "Language"
-    ] // default all filter list groupIds included
+    ], // default all filter list groupIds included
+    withOwnMirror: { 
+      account: 'gingergeek8192', // adtidy-filter-mirror home
+      optIns: [
+          `JSDELIVR`, // jsdelivr CDN github repo resolves to      Fastly 
+          `GITLAB`,   // duplicate repository repo resolves to     Cloudflare
+          `GITHUB`,   // adtidy-filter-mirror resolves to          ??
+          `ADTIDY`    // original filters CDN resolves to          Qrator 
+      ]
+  }
 })
 
 ```
@@ -324,6 +333,7 @@ With `withBuildSync: false` (default), the engine builds asynchronously and `cre
 | `webContents` | `Electron.WebContents` | - | Target to attach to |
 | `withBeforeRequest` | `boolean` | `false` | `true`: consumer owns `onBeforeRequest(()=>{})` via `onBeforeReady(()=>{})` |
 | `withWindowOpenHandler` | `boolean` | `false` | `true`: consumer decides window opens via `setWindowOpenHandler(()=>{})` |
+| `withOwnMirror` | `Object` | `false` | Consumer-controlled filter mirror configuration. Accepts an account (GitHub account name) and optIns array specifying enabled providers (`GITHUB`, `GITLAB`, `JSDELIVR`). |
 | `withAllowIncludesArray` | `string[]` | `[]` | URL substrings allowed. Takes priority over `withBlockIncludesArray`. |
 | `withBlockIncludesArray` | `string[]` | `['devtools', 'devtool']` | URL substrings blocked. |
 | `withAutoAttachFilter` | `Object[]` | `workers` | Attachment types excluded from interception. Defaults to `service_worker`, `shared_worker`, and `worker`. |

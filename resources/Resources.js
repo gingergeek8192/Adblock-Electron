@@ -11,7 +11,7 @@ const Resources = Object.assign(
     _setPROPS(language, groupIds, withBuildSync, withOwnMirror) {
         Object.assign(this, {
             account: withOwnMirror.account,
-            optIns: withOwnMirror.optIns,
+            optIns: [...new Set([...withOwnMirror.optIns, `ADTIDY`])],
             opts: {
                 ADTIDY_JSON: 'downloadUrl',
                 GITHUB_PING: 'mirrorUrl',
@@ -49,15 +49,15 @@ const Resources = Object.assign(
              * Lightweight json response. Pre resource-request ping and schedule update verification.
              * @returns JSON {"ok":true,"updatedAt":"2026-11-09T16:51:28Z","nextUpdate":"2026-11-10T05:51:28Z"}
              */
-            GITLAB_PING: `https://gitlab.com/${withOwnMirror.account}/redundancy-layers/-/raw/main/public/ping.json`,
+            GITLAB_PING: `https://gitlab.com/${withOwnMirror.account}/adtidy-filter-mirror/-/raw/main/public/ping.json`,
             /**
              * Base for all gitlab hosted list resources - local metadata rebuild should jsdelivr or github filters.json be unreachable
              */
-            GITLAB_BASE: `https://gitlab.com/${withOwnMirror.account}/redundancy-layers/-/raw/main/public/extension/chromium/`,
+            GITLAB_BASE: `https://gitlab.com/${withOwnMirror.account}/adtidy-filter-mirror/-/raw/main/public/extension/chromium/`,
             /**
              * Gitlab hosted filters metadata holds all resource url entries consumed by Adblock-Electron
              */
-            GITLAB_JSON: `https://gitlab.com/${withOwnMirror.account}/redundancy-layers/-/raw/main/public/extension/chromium/filters.json`,
+            GITLAB_JSON: `https://gitlab.com/${withOwnMirror.account}/adtidy-filter-mirror/-/raw/main/public/extension/chromium/filters.json`,
             /**
              * Adtidy metadata fallback path in case primary meta source is unreachable
              */

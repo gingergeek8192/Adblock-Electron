@@ -282,8 +282,7 @@ const Adblock = {
             optIns: [
                 `JSDELIVR`, 
                 `GITLAB`, 
-                `GITHUB`, 
-                `ADTIDY`
+                `GITHUB`
             ]
         },
         withGroups = [        
