@@ -17,7 +17,7 @@ Network request blocking without claiming ownership of `onBeforeRequest(()=>{})`
 Cosmetic filtering and script injection to sub_frames and main_frame with no cross-origin restrictions.
 <br>
 
-The supplied adtidy-filter-mirror repository is intended to be cloned by consumer developers who want to maintain their own filter resources rather than depend on the original repository.
+The supplied [adtidy-filter-mirror](https://github.com/gingergeek8192/adtidy-filter-mirror) repository is intended to be cloned by consumer developers who want to maintain their own filter resources rather than depend on the original repository.
 
 Adblock-Electron updates every 12 hours by fetching from the fastest-responding of the adtidy-filter-mirror. <br> 
 The [adtidy-filter-mirror](https://github.com/gingergeek8192/adtidy-filter-mirror) is maintained for Adblock-Electron's first-run and update redundancy, utilizing four hosts (AdTidy, GitHub, jsDelivr, GitLab) across three independent CDN networks `Qrator`, `Fastly` and `Cloudflare`.<br>
