@@ -257,6 +257,7 @@ const Adblock = {
 
     },
 
+
     /**
      * Initializes the adblock engine with specified language and filter groups.
      * Polls for network connectivity if offline, then loads cached lists or fetches new ones.
@@ -276,6 +277,15 @@ const Adblock = {
         // from app.whenReady() ensures the engine is built before the application window appears.
         withBuildSync = false,
         withLanguageSpecific = "en",
+        withOwnMirror = { 
+            account: 'gingergeek8192', 
+            optIns: [
+                `JSDELIVR`, 
+                `GITLAB`, 
+                `GITHUB`, 
+                `ADTIDY`
+            ]
+        },
         withGroups = [        
             `AdBlocking`,
             `Privacy`,
@@ -288,7 +298,7 @@ const Adblock = {
     }={}) => {
         // Adblock instance reference a single Engine / Resources instance 
         // for concise update logic and uniform "hot" engine updates.
-        Resources._setPROPS(withLanguageSpecific.toLowerCase(), withGroups.map(wG=> wG.toLowerCase()), withBuildSync)
+        Resources._setPROPS(withLanguageSpecific.toLowerCase(), withGroups.map(wG=> wG.toLowerCase()), withBuildSync, withOwnMirror)
         // Bind callback in case of registered onActionableResourceEvent
         Resources._throwBack = (err, code, percentage) => Resources.emit('adblock-error', { err, code, percentage })
         // If no cache and "offline" (all four resources unreachable) notify consumer 

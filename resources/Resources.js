@@ -8,52 +8,54 @@ import crypto from 'node:crypto';
 const Resources = Object.assign(
     new EventEmitter(), {
         
-    _setPROPS(language, groupIds, withBuildSync) {
+    _setPROPS(language, groupIds, withBuildSync, withOwnMirror) {
         Object.assign(this, {
+            account: withOwnMirror.account,
+            optIns: withOwnMirror.optIns,
             /**
              * Lightweight json response. Pre resource-request ping and schedule update verification.
              * @returns JSON {"ok":true,"updatedAt":"2026-11-09T16:51:28Z","nextUpdate":"2026-11-10T05:51:28Z"}
              */
-            JSDELIVR_PING: 'https://cdn.jsdelivr.net/gh/gingergeek8192/adtidy-filter-mirror@main/public/ping.json',
+            JSDELIVR_PING: `https://cdn.jsdelivr.net/gh/${withOwnMirror.account}/adtidy-filter-mirror@main/public/ping.json`,
             /**
              * Base for all jsdelivr hosted list resources - local metadata rebuild should jsdelivr or github filters.json be unreachable
              */
-            JSDELIVR_BASE: 'https://cdn.jsdelivr.net/gh/gingergeek8192/adtidy-filter-mirror@main/public/extension/chromium/',
+            JSDELIVR_BASE: `https://cdn.jsdelivr.net/gh/${withOwnMirror.account}/adtidy-filter-mirror@main/public/extension/chromium/`,
             /**
              * Jsdelivr hosted filters metadata holds all resource url entries consumed by Adblock-Electron
              */
-            JSDELIVR_JSON: 'https://cdn.jsdelivr.net/gh/gingergeek8192/adtidy-filter-mirror@main/public/extension/chromium/filters.json',
+            JSDELIVR_JSON: `https://cdn.jsdelivr.net/gh/${withOwnMirror.account}/adtidy-filter-mirror@main/public/extension/chromium/filters.json`,
 
             /**
              * Lightweight json response. Pre resource-request ping and schedule update verification.
              * @returns JSON {"ok":true,"updatedAt":"2026-11-09T16:51:28Z","nextUpdate":"2026-11-10T05:51:28Z"}
              */
-            GITHUB_PING: 'https://raw.githubusercontent.com/gingergeek8192/adtidy-filter-mirror/main/public/ping.json',
+            GITHUB_PING: `https://raw.githubusercontent.com/${withOwnMirror.account}/adtidy-filter-mirror/main/public/ping.json`,
             /**
              * Base for all github hosted list resources - local metadata rebuild should jsdelivr or github filters.json be unreachable
              */
-            GITHUB_BASE: 'https://raw.githubusercontent.com/gingergeek8192/adtidy-filter-mirror/main/public/extension/chromium/',
+            GITHUB_BASE: `https://raw.githubusercontent.com/${withOwnMirror.account}/adtidy-filter-mirror/main/public/extension/chromium/`,
             /**
              * Github hosted filters metadata holds all resource url entries consumed by Adblock-Electron
              */
-            GITHUB_JSON: 'https://raw.githubusercontent.com/gingergeek8192/adtidy-filter-mirror/main/public/extension/chromium/filters.json',
+            GITHUB_JSON: `https://raw.githubusercontent.com/${withOwnMirror.account}/adtidy-filter-mirror/main/public/extension/chromium/filters.json`,
             /**
              * Lightweight json response. Pre resource-request ping and schedule update verification.
              * @returns JSON {"ok":true,"updatedAt":"2026-11-09T16:51:28Z","nextUpdate":"2026-11-10T05:51:28Z"}
              */
-            GITLAB_PING: 'https://gitlab.com/gingergeek8192/redundancy-layers/-/raw/main/public/ping.json',
+            GITLAB_PING: `https://gitlab.com/${withOwnMirror.account}/redundancy-layers/-/raw/main/public/ping.json`,
             /**
              * Base for all gitlab hosted list resources - local metadata rebuild should jsdelivr or github filters.json be unreachable
              */
-            GITLAB_BASE: 'https://gitlab.com/gingergeek8192/redundancy-layers/-/raw/main/public/extension/chromium/',
+            GITLAB_BASE: `https://gitlab.com/${withOwnMirror.account}/redundancy-layers/-/raw/main/public/extension/chromium/`,
             /**
              * Gitlab hosted filters metadata holds all resource url entries consumed by Adblock-Electron
              */
-            GITLAB_JSON: 'https://gitlab.com/gingergeek8192/redundancy-layers/-/raw/main/public/extension/chromium/filters.json',
+            GITLAB_JSON: `https://gitlab.com/${withOwnMirror.account}/redundancy-layers/-/raw/main/public/extension/chromium/filters.json`,
             /**
              * Adtidy metadata fallback path in case primary meta source is unreachable
              */
-            ADTIDY_JSON: 'https://filters.adtidy.org/extension/chromium/filters.json',
+            ADTIDY_JSON: `https://filters.adtidy.org/extension/chromium/filters.json`,
             /**
              * Final online check URL given the chances of 5 endpoints being simultaneously unavailable
              */
@@ -62,11 +64,8 @@ const Resources = Object.assign(
              * Basic online check, endpoints used for _online() method before any other network request
              */
             get ONLINE() {
-            return [
-                this.GITHUB_PING,
-                this.GITLAB_PING,
-                this.JSDELIVR_PING,
-            ]},
+               return  this.optIns.map(opt => this[`${opt}_PING`])
+            },
             /**
              * Timestamp from the most recent update
             */
@@ -196,7 +195,7 @@ const Resources = Object.assign(
      * Checks paths array length returned from initialization call to _scan()
      * @returns Boolean
      */
-    _isFreshCacheRun() {
+    isFirstRun() {
         return (this.paths.length === 0)
     },
     /**
@@ -461,12 +460,15 @@ const Resources = Object.assign(
      */
     _getMeta() {
         return Promise.any(
-            [
-                { JSON: `JSDELIVR_JSON`, source: `JSDELIVR`}, 
-                { JSON: `GITLAB_JSON`, source: `GITLAB`}, 
-                { JSON: `GITHUB_JSON`, source: `GITHUB`}, 
-                { JSON: `ADTIDY_JSON`, source: `ADTIDY`}, 
-            ].map(
+//  [
+//      { JSON: `JSDELIVR_JSON`, source: `JSDELIVR`}, 
+//      { JSON: `GITLAB_JSON`, source: `GITLAB`}, 
+//      { JSON: `GITHUB_JSON`, source: `GITHUB`}, 
+//      { JSON: `ADTIDY_JSON`, source: `ADTIDY`}, 
+//  ],
+        this.optIns
+        .map(opt => ({ JSON: `${opt}_JSON`, source: `${opt}`}))
+            .map(
                 (obj) => fetch(this[obj.JSON])
                 .then((res) => res.json())
                 .then(json => ({ json, source: obj.source }))
@@ -514,7 +516,7 @@ const Resources = Object.assign(
             )
         )
         .then(R => {
-            if (this._isFreshCacheRun()) {
+            if (this.isFirstRun()) {
                 const percent = this._failRate(R)
                 if (percent > 0)
                     this._throwBack('ERROR', 'RESOURCE_DOWNLOAD', 100 - percent)
