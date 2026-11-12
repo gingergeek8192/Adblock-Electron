@@ -194,7 +194,7 @@ The Adblock `tsurlfilter` engine must be initialized before Adblock instantiatio
 - Specific filter group IDs `withGroups` (default all groupIds), 
 - Language: `withLanguageSpecific` (default English)
 - Build mode: synchronous / asynchronous `withBuildSync` (default Async)
-
+- Consumer-controlled filter mirror `withOwnMirror`  Accepts an account (user-name) and optIns array specifying enabled providers [`GITHUB`, `GITLAB`, `JSDELIVR`]
 <br>
 
 
@@ -274,7 +274,7 @@ Adblock.setResources({
 })
 
 ```
-Calling `setResources({})` at earliest opportunity is advised
+Calling `setResources({})` at the earliest opportunity is advised
 ```js
 
 // electron event
@@ -333,7 +333,6 @@ With `withBuildSync: false` (default), the engine builds asynchronously and `cre
 | `webContents` | `Electron.WebContents` | - | Target to attach to |
 | `withBeforeRequest` | `boolean` | `false` | `true`: consumer owns `onBeforeRequest(()=>{})` via `onBeforeReady(()=>{})` |
 | `withWindowOpenHandler` | `boolean` | `false` | `true`: consumer decides window opens via `setWindowOpenHandler(()=>{})` |
-| `withOwnMirror` | `Object` | `false` | Consumer-controlled filter mirror configuration. Accepts an account (GitHub account name) and optIns array specifying enabled providers (`GITHUB`, `GITLAB`, `JSDELIVR`). |
 | `withAllowIncludesArray` | `string[]` | `[]` | URL substrings allowed. Takes priority over `withBlockIncludesArray`. |
 | `withBlockIncludesArray` | `string[]` | `['devtools', 'devtool']` | URL substrings blocked. |
 | `withAutoAttachFilter` | `Object[]` | `workers` | Attachment types excluded from interception. Defaults to `service_worker`, `shared_worker`, and `worker`. |
@@ -361,29 +360,28 @@ Instantiating Adblock with `createAdblock({...})` on the `createReady(()=>{})` e
 Supply the mandatory webContents argument and let Adblock-Electron apply its defaults.
 
 ```js
+
 // Default config passing the mandatory webContents argument only ...
 Adblock.createReady(() => 
     Adblock.createAdblock({
         webContents: win.webContents
     })
 )
+
 ```
 
 ### The equivalent configuration with all defaults declared explicitly:
 
 ```js
+
 Adblock.createReady(() =>
     Adblock.createAdblock({
         webContents: win.webContents,
-
         withAllowIncludesArray: [],
-        withBlockIncludesArray: ["devtools", "devtool"],
-
+        withBlockIncludesArray: ["devtools", "devtool"], // Blocks 
         withBeforeRequest: false,
         withWindowOpenHandler: false,
-
         withDebuggerResume: true, // Counteracts sites deliberately pausing execution when they detect DevTools (e.g. streaming sites).
-
         withAutoAttachFilter: [ // Stops Adblock-Electron targeting workers.
             { type: "service_worker", exclude: true },
             { type: "shared_worker", exclude: true },
@@ -393,6 +391,7 @@ Adblock.createReady(() =>
         withConsole: false
     })
 )
+
 ```
 
 <br>
