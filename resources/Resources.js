@@ -155,10 +155,6 @@ const Resources = Object.assign(
              */
             Engine: null,
             /**
-             * flag to return from pending requests and callbacks 
-             */
-            RELEASE: false,
-            /**
              * Filter list groups config verification. Throws on invalid list group
              */
             includeLists:
@@ -407,11 +403,6 @@ const Resources = Object.assign(
             .replace(/\n+/g, '\n')
         };
     },
-    _isOnline() {
-        fetch(this.GOOGLE_ONLINE)
-        .then((res)=> res.ok && res.status === 204)
-        .catch(()=>false)
-    },
     /**
      * Gates a callback behind a connectivity check, polling until online.
      * Emits `adblock-offline` on first failed check, `adblock-online` on recovery.
@@ -441,7 +432,6 @@ const Resources = Object.assign(
                     this.emit('adblock-offline')
                     emitted = true
             }
-            if (this.RELEASE) return
             L = true
             setTimeout(poll, T)
             T += 250
@@ -687,11 +677,10 @@ const Resources = Object.assign(
         this.on('adblock-lists-update', callback);
     },
     /**
-     * Checks how long ago the last update was and either triggers an update
-     * cycle or schedules one for when the remaining time elapses.
-     * If `nextUpdate` is in the past, retries after a 2 hour buffer instead of firing immediately.
+     * Checks how long ago the last update was and either triggers an immediate
+     * update cycle or schedules one for when the remaining time elapses.
      * Called after first-run store and after each completed update.
-     * @param {number} [next] - Ms until `nextUpdate`; defaults to live calculation
+     * @param {number} [next] - Hours since `nextUpdate`; defaults to live calculation
      * @returns {void}
      */
     _setUpdateScheduleEvents(
@@ -710,7 +699,6 @@ const Resources = Object.assign(
                 })
             )
         }
-        if (next <= 0) next = 2 * 3_600_000
         setTimeout(() => this._setUpdateScheduleEvents(), next)
     },
     /**
@@ -812,23 +800,17 @@ const Resources = Object.assign(
      * On `adblock-offline`, checks whether cached lists are absent or incomplete.
      * If so, confirms connectivity via `GOOGLE_ONLINE` and emits `adblock-error`
      * with code `OFFLINE` — `successRate: 0` if reachable, `100` if unreachable.
-     * If online, returns true from Google generate 204 then we have no cache and
-     * all resource endpoints are down. In this case, consumer-release event fires t ]
-     * allow the consumer to recover with grace  
      * @returns {void}
      */
     _checkPathsOnZeroNotify() {
         this.on('adblock-offline',() => {
-            if (!this.paths.length || this.paths.length < this.log?.reckon) {
-                const online = this._isOnline()
-                if (online) {
-                    this.RELEASE = true
-                    this.emit('adblock-create-ready');
-                    return this._throwBack('ERROR', `OFFLINE`, 0)
-                }
-                    
-                return this._throwBack('ERROR', `OFFLINE`, 100)
-            }
+        if (!this.paths.length || this.paths.length < this.log?.reckon)
+            fetch(this.GOOGLE_ONLINE)
+            .then((res)=> {
+                if (res.ok && res.status === 204)
+                    this._throwBack('ERROR', `OFFLINE`, 0)
+            })
+            .catch(()=> this._throwBack('ERROR', `OFFLINE`, 100))
         })
     }
 });

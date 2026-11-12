@@ -148,13 +148,6 @@ const Adblock = {
      * Supplying an empty array removes those exclusions and allows the default
      * CDP auto-attach behavior to be used.
      *
-     * @param {string[]} [options.withAllowIncludesArray=[]]
-     * URL substrings to allow independently of AdGuard's filtering rules.
-     *
-     * Matching uses `url.includes()`, so partial URL matches are sufficient.
-     * Takes priority over `withBlockIncludesArray`: a URL matching both an allow
-     * entry and a block entry will be allowed.
-     *
      * @param {string[]} [options.withBlockIncludesArray=['devtools', 'devtool']]
      * URL substrings to block independently of AdGuard's filtering rules.
      *
@@ -163,7 +156,7 @@ const Adblock = {
      * additional application-specific filtering against resources associated
      * with cdn hosted anti-dev-tools scripts / developer-tools detection.
      *
-     * Allow-list entries (`withAllowIncludesArray`) take priority over block entries.
+     * Explicit block rules take precedence over allow-list exceptions.
      *
      * @param {boolean} [options.withDebuggerResume=true]
      * Automatically resumes execution when debugger-paused targets are encountered.

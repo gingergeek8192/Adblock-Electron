@@ -520,7 +520,7 @@ The last event to fire is `urlReady(()=>{})`; at this point, we're about to bloc
 
 <br>
 
-##  Actionable resource events `onActionableResourceEvent(()=>{})` 
+## `onActionableResourceEvent(()=>{})` 
 
 <br> 
 
