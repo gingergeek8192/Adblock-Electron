@@ -263,12 +263,12 @@ Adblock.setResources({
         "Language"
     ], // default all filter list groupIds included
     withOwnMirror: { 
-      account: 'gingergeek8192', // adtidy-filter-mirror home
+      account: 'your-username',
       optIns: [
-          `JSDELIVR`, // jsdelivr CDN github repo resolves to      Fastly 
-          `GITLAB`,   // duplicate repository repo resolves to     Cloudflare
-          `GITHUB`,   // adtidy-filter-mirror resolves to          ??
-          `ADTIDY`    // original filters CDN resolves to          Qrator 
+          `JSDELIVR`,
+          `GITLAB`,   
+          `GITHUB`  
+                     // Adtidy is included by default
       ]
   }
 })
