@@ -49,7 +49,7 @@ Additional third-party filter list support is planned.<br> Results shown below u
 
 <br> <br>
 
-- Adblock Test Logs 📋 🔥
+**Adblock Test Logs 📋 🔥**
 
 Adblock-Electron `withConsole` logs instance initialization events, lifecycle and per-frame cosmetic CSS/JS filter injection. 
 
