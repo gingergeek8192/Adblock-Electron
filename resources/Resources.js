@@ -196,7 +196,7 @@ const Resources = Object.assign(
      * Checks paths array length returned from initialization call to _scan()
      * @returns Boolean
      */
-    isFirstRun() {
+    _isFreshCacheRun() {
         return (this.paths.length === 0)
     },
     /**
@@ -514,7 +514,7 @@ const Resources = Object.assign(
             )
         )
         .then(R => {
-            if (this.isFirstRun()) {
+            if (this._isFreshCacheRun()) {
                 const percent = this._failRate(R)
                 if (percent > 0)
                     this._throwBack('ERROR', 'RESOURCE_DOWNLOAD', 100 - percent)
@@ -677,10 +677,11 @@ const Resources = Object.assign(
         this.on('adblock-lists-update', callback);
     },
     /**
-     * Checks how long ago the last update was and either triggers an immediate
-     * update cycle or schedules one for when the remaining time elapses.
+     * Checks how long ago the last update was and either triggers an update
+     * cycle or schedules one for when the remaining time elapses.
+     * If `nextUpdate` is in the past, retries after a 2 hour buffer instead of firing immediately.
      * Called after first-run store and after each completed update.
-     * @param {number} [next] - Hours since `nextUpdate`; defaults to live calculation
+     * @param {number} [next] - Ms until `nextUpdate`; defaults to live calculation
      * @returns {void}
      */
     _setUpdateScheduleEvents(
@@ -699,6 +700,7 @@ const Resources = Object.assign(
                 })
             )
         }
+        if (next <= 0) next = 2 * 3_600_000
         setTimeout(() => this._setUpdateScheduleEvents(), next)
     },
     /**
