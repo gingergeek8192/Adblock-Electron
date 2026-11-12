@@ -344,17 +344,5 @@ const Adblock = {
     }
 
 };
-// testing only! FOR DEV ONLY!
-Adblock.setResources({
-withBuildSync: false,
-withGroups: [        
-            `AdBlocking`,
-            `Privacy`,
-            `SocialWidgets`,
-            `Annoyances`,
-            `Security`,
-            `Other`,
-            `Language`,
-        ]
-})
+
 export default Adblock

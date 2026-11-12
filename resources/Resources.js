@@ -12,6 +12,12 @@ const Resources = Object.assign(
         Object.assign(this, {
             account: withOwnMirror.account,
             optIns: withOwnMirror.optIns,
+            opts: {
+                ADTIDY_JSON: 'downloadUrl',
+                GITHUB_PING: 'mirrorUrl',
+                GITLAB_PING: 'gitlabUrl',
+                JSDELIVR_PING: 'jsDelivrUrl',
+            },
             /**
              * Lightweight json response. Pre resource-request ping and schedule update verification.
              * @returns JSON {"ok":true,"updatedAt":"2026-11-09T16:51:28Z","nextUpdate":"2026-11-10T05:51:28Z"}
@@ -460,12 +466,6 @@ const Resources = Object.assign(
      */
     _getMeta() {
         return Promise.any(
-//  [
-//      { JSON: `JSDELIVR_JSON`, source: `JSDELIVR`}, 
-//      { JSON: `GITLAB_JSON`, source: `GITLAB`}, 
-//      { JSON: `GITHUB_JSON`, source: `GITHUB`}, 
-//      { JSON: `ADTIDY_JSON`, source: `ADTIDY`}, 
-//  ],
         this.optIns
         .map(opt => ({ JSON: `${opt}_JSON`, source: `${opt}`}))
             .map(
@@ -477,12 +477,11 @@ const Resources = Object.assign(
         .catch(() => ({ json: null, source: null }))
     },
     async _rankSources() {
-        const probes = [
-            ['downloadUrl', this.ADTIDY_JSON],
-            ['mirrorUrl',   this.GITHUB_PING],
-            ['jsDelivrUrl', this.JSDELIVR_PING],
-            ['gitlabUrl',   this.GITLAB_PING],
-        ]
+        const probes = this.optIns.map(opt => [
+            this.opts[`${opt}_PING`],
+            this[`${opt}_PING`]
+        ])
+        probes[3] = ['downloadUrl', this.ADTIDY_JSON]
         const timed = await Promise.all(probes.map(async ([key, url]) => {
             const t = performance.now()
             const ok = await fetch(url, { method: 'HEAD' }).then(r => r.ok).catch(() => false)
