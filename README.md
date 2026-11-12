@@ -319,8 +319,8 @@ With `withBuildSync: false` (default), the engine builds asynchronously and `cre
 | `webContents` | `Electron.WebContents` | - | Target to attach to |
 | `withBeforeRequest` | `boolean` | `false` | `true`: consumer owns `onBeforeRequest(()=>{})` via `onBeforeReady(()=>{})` |
 | `withWindowOpenHandler` | `boolean` | `false` | `true`: consumer decides window opens via `setWindowOpenHandler(()=>{})` |
-| `withAllowIncludesArray` | `string[]` | `[]` | URL substrings exempted from blocking. Block matches take precedence. |
-| `withBlockIncludesArray` | `string[]` | `['devtools', 'devtool']` | URL substrings always blocked. |
+| `withAllowIncludesArray` | `string[]` | `[]` | URL substrings allowed. Takes priority over `withBlockIncludesArray`. |
+| `withBlockIncludesArray` | `string[]` | `['devtools', 'devtool']` | URL substrings blocked. |
 | `withAutoAttachFilter` | `Object[]` | `workers` | Attachment types excluded from interception. Defaults to `service_worker`, `shared_worker`, and `worker`. |
 | `withDebuggerResume` | `boolean` | `true` | Auto-resume debugger-paused targets. Enabled by default. |
 | `withConsole` | `boolean` | `false` | Diagnostic console output. |
@@ -516,3 +516,17 @@ The last event to fire is `urlReady(()=>{})`; at this point, we're about to bloc
 
 ```
 
+<br>
+
+##  Actionable resource events `onActionableResourceEvent(()=>{})` 
+
+<br> 
+
+Adblock-Electron uses multiple resource hosts with automatic fallback and recovery.
+<br> 
+Individual endpoint failures are handled internally wherever possible.
+<br>
+
+Adblock-Electron's `onActionableResourceEvent()` exposes conditions requiring host-application awareness, including ***resource availability***, ***filesystem access***, ***persistence failures*** and ***online connectivity***.
+<br>
+Events include an error code and operational percentage, allowing the host application to determine whether intervention is necessary without making resource failures fatal to the application.
