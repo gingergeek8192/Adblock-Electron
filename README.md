@@ -175,7 +175,9 @@ Adblock-Electron's initialization API is therefore primarily event-driven.
 <br>
 
 
-❗ **Event-driven:** `setResources({})` → `createReady(()=>{})` → `createAdblock({})` → `onBeforeReady(()=>{})` → `setWindowOpenHandler(()=>{})` → `urlReady(()=>{})`
+❗ **Event-driven:** 
+<br> 
+`setResources({})` → `createReady(()=>{})` → `createAdblock({})` → <br> `onBeforeReady(()=>{})` → `setWindowOpenHandler(()=>{})` → `urlReady(()=>{})`
 
 <br>
 
