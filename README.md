@@ -1,5 +1,5 @@
 # Adblock-Electron
-
+## IN ACTIVE DEVELOPMENT DECOUPLE FROM CONSUMER APPLICATION. DO NOT USE THIS PACKAGE YET
 An Electron adblocking package built on AdGuard's `tsurlfilter` engine.
 
 - **No IPC.**
@@ -262,18 +262,20 @@ Adblock.setResources({
         "Other",
         "Language"
     ], // default all filter list groupIds included
+
     withOwnMirror: { 
-      account: 'your-username',
+      account: 'your-username', // details on adtidy-filter-mirror
       optIns: [
           `JSDELIVR`,
           `GITLAB`,   
           `GITHUB`  
-                     // Adtidy is included by default
+                     // adtidy is included by default
       ]
   }
 })
 
 ```
+
 Calling `setResources({})` at the earliest opportunity is advised
 ```js
 

@@ -160,6 +160,10 @@ const Resources = Object.assign(
              */
             Engine: null,
             /**
+             * If the engine is already built and running, this flag stops code 0 errors
+             */
+            isEngine: false,
+            /**
              * Filter list groups config verification. Throws on invalid list group
              */
             includeLists:
@@ -651,6 +655,7 @@ const Resources = Object.assign(
     async _ready() {
         this.Engine = this.modeSync ? this._buildAdguardEngine() : await this._buildAdguardEngine()
         this.emit('adblock-resources', this);
+        this.isEngine = true
     },
     /**
      * Rebuilds the engine with updated filter lists and emits `adblock-lists-update`.
@@ -659,6 +664,7 @@ const Resources = Object.assign(
     async _update() {
         this.Engine =  await this._buildAdguardEngine('createAsync')
         this.emit('adblock-lists-update', this);
+        this.isEngine = true
     },
     /**
      * Registers a one-time listener for `adblock-resources` and emits `adblock-create-ready`.
@@ -805,13 +811,13 @@ const Resources = Object.assign(
      * with code `OFFLINE` — `successRate: 0` if reachable, `100` if unreachable.
      * @returns {void}
      */
-    _checkPathsOnZeroNotify() {
+    _checkNotIsEngine() {
         this.on('adblock-offline',() => {
-        if (!this.paths.length || this.paths.length < this.log?.reckon)
+        if (!this.paths.length || this.paths.length < this.log?.reckon && !this.isEngine)
             fetch(this.GOOGLE_ONLINE)
             .then((res)=> {
                 if (res.ok && res.status === 204)
-                    this._throwBack('ERROR', `OFFLINE`, 0)
+                        this._throwBack('ERROR', `OFFLINE`, 0)
             })
             .catch(()=> this._throwBack('ERROR', `OFFLINE`, 100))
         })

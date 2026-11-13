@@ -301,7 +301,7 @@ const Adblock = {
         // Bind callback in case of registered onActionableResourceEvent
         Resources._throwBack = (err, code, percentage) => Resources.emit('adblock-error', { err, code, percentage })
         // If no cache and "offline" (all four resources unreachable) notify consumer 
-        Resources._checkPathsOnZeroNotify()
+        Resources._checkNotIsEngine()
         Resources.paths = []
         // Callback passed to _online.
         // If adtidy, jsdelivr, github or gitlab can not be reached it polls then executes on success
