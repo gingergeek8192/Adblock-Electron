@@ -5,6 +5,9 @@ import { app, net } from 'electron';
 const MIRROR_HOSTS = ['cdn.jsdelivr.net', 'raw.githubusercontent.com', 'gitlab.com', 'filters.adtidy.org'];
 const META_JSON    = '/extension/chromium/filters.json';
 
+// Saved at module load time — before any fault is installed
+const _realIsOnline = net.isOnline.bind(net);
+
 /**
  * @typedef {{ _install: () => (() => void) | null }} FaultCase
  */
@@ -18,14 +21,11 @@ const META_JSON    = '/extension/chromium/filters.json';
 const OFFLINE = {
     _install() {
         const _realFetch = globalThis.fetch.bind(globalThis);
-        const _realIsOnline = net.isOnline.bind(net);
         globalThis.fetch = () => Promise.reject(new TypeError('[fault] OFFLINE: all fetch blocked'));
-        try { Object.defineProperty(net, 'isOnline', { configurable: true, writable: true, value: () => false }); } catch {}
-        try { net.isOnline = () => false; } catch {}
+        net.isOnline = () => false;
         return () => {
             globalThis.fetch = _realFetch;
-            try { Object.defineProperty(net, 'isOnline', { configurable: true, writable: true, value: _realIsOnline }); } catch {}
-            try { net.isOnline = _realIsOnline; } catch {}
+            net.isOnline = _realIsOnline;
         };
     }
 };
@@ -41,7 +41,6 @@ const MIRROR_DOWN = {
         const _realFetch = globalThis.fetch.bind(globalThis);
         globalThis.fetch = (url, init) => {
             const s = String(url);
-            // let pings through so mirrorOnline = true, block everything else on mirror hosts
             if (MIRROR_HOSTS.some(h => s.includes(h)) && !s.includes('ping.json')) {
                 console.log('[fault] MIRROR_DOWN: blocked →', url);
                 return Promise.reject(new TypeError('[fault] MIRROR_DOWN: unreachable'));
