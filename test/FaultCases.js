@@ -15,24 +15,19 @@ const META_JSON    = '/extension/chromium/filters.json';
  * Expected: `adblock-offline` fires, polling begins, recovers when restored.
  * @type {FaultCase}
  */
-const _overrideIsOnline = (fn) => {
-    try {
-        Object.defineProperty(net, 'isOnline', { configurable: true, value: fn });
-    } catch {}
-};
-const _restoreIsOnline = () => {
-    try {
-        Object.defineProperty(net, 'isOnline', { configurable: true, value: _realNetIsOnline });
-    } catch {}
-};
-const _realNetIsOnline = net.isOnline.bind(net);
-
 const OFFLINE = {
     _install() {
         const _realFetch = globalThis.fetch.bind(globalThis);
         globalThis.fetch = () => Promise.reject(new TypeError('[fault] OFFLINE: all fetch blocked'));
-        _overrideIsOnline(() => { console.log('[fault] OFFLINE: net.isOnline → false'); return false; });
-        return () => { globalThis.fetch = _realFetch; _restoreIsOnline(); };
+        try {
+            Object.defineProperty(net, 'isOnline', { configurable: true, writable: true, value: () => false });
+        } catch {}
+        return () => {
+            globalThis.fetch = _realFetch;
+            try {
+                Object.defineProperty(net, 'isOnline', { configurable: true, writable: true, value: net.isOnline.bind(net) });
+            } catch {}
+        };
     }
 };
 
