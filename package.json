@@ -1,0 +1,17 @@
+{
+  "name": "adblock-electron",
+  "version": "1.0.0",
+  "type": "module",
+  "main": "./Adblock.js",
+  "exports": {
+    ".": "./Adblock.js"
+  },
+  "files": ["./"],
+  "dependencies": {
+    "tldts-experimental": "latest",
+    "@adguard/tsurlfilter": "^6.0.4"
+  },
+  "peerDependencies": {
+    "electron": ">=45.0.0"
+  }
+}

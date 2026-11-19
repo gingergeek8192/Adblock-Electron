@@ -60,6 +60,7 @@ const Inject = {
    * @returns {void}
    */
   _agMainFrame(result, frameId, sessionId) {
+    if (!result) return
     this.mainLoadEvent = true
     this._injections(result, frameId, sessionId)
   },
@@ -70,7 +71,8 @@ const Inject = {
    * @param {string} sessionId
    * @returns {void}
    */
-  _agChildFrame(result, frameId, sessionId) {
+  _agSubFrame(result, frameId, sessionId) {
+    if (!result) return
     this._injections(result, frameId, sessionId)
   }
 };

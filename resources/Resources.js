@@ -1,14 +1,17 @@
 import { Engine, FilterList, setConfiguration } from '@adguard/tsurlfilter';
 import { EventEmitter } from 'node:events';
-import { app } from 'electron';
+import { app,  net } from 'electron';
 import path from 'node:path';
 import fs from 'node:fs';
 import crypto from 'node:crypto';
 
 const Resources = Object.assign(
     new EventEmitter(), {
-        
-    _setPROPS(language, groupIds, withBuildSync, withOwnMirror) {
+
+    setResourcesLock: false,
+    setupRequired: false,
+    
+    _setPROPS(language, groupIds, withOwnMirror) {
         Object.assign(this, {
             account: withOwnMirror.account,
             optIns: [...new Set([...withOwnMirror.optIns, `ADTIDY`])],
@@ -18,6 +21,7 @@ const Resources = Object.assign(
                 GITLAB_PING: 'gitlabUrl',
                 JSDELIVR_PING: 'jsDelivrUrl',
             },
+            paths: [],
             /**
              * Lightweight json response. Pre resource-request ping and schedule update verification.
              * @returns JSON {"ok":true,"updatedAt":"2026-11-09T16:51:28Z","nextUpdate":"2026-11-10T05:51:28Z"}
@@ -49,15 +53,15 @@ const Resources = Object.assign(
              * Lightweight json response. Pre resource-request ping and schedule update verification.
              * @returns JSON {"ok":true,"updatedAt":"2026-11-09T16:51:28Z","nextUpdate":"2026-11-10T05:51:28Z"}
              */
-            GITLAB_PING: `https://gitlab.com/${withOwnMirror.account}/adtidy-filter-mirror/-/raw/main/public/ping.json`,
+            GITLAB_PING: `https://gitlab.com/${withOwnMirror.account}/redundancy-layers/-/raw/main/public/ping.json`,
             /**
              * Base for all gitlab hosted list resources - local metadata rebuild should jsdelivr or github filters.json be unreachable
              */
-            GITLAB_BASE: `https://gitlab.com/${withOwnMirror.account}/adtidy-filter-mirror/-/raw/main/public/extension/chromium/`,
+            GITLAB_BASE: `https://gitlab.com/${withOwnMirror.account}/redundancy-layers/-/raw/main/public/extension/chromium/`,
             /**
              * Gitlab hosted filters metadata holds all resource url entries consumed by Adblock-Electron
              */
-            GITLAB_JSON: `https://gitlab.com/${withOwnMirror.account}/adtidy-filter-mirror/-/raw/main/public/extension/chromium/filters.json`,
+            GITLAB_JSON: `https://gitlab.com/${withOwnMirror.account}/redundancy-layers/-/raw/main/public/extension/chromium/filters.json`,
             /**
              * Adtidy metadata fallback path in case primary meta source is unreachable
              */
@@ -65,18 +69,14 @@ const Resources = Object.assign(
             /**
              * Final online check URL given the chances of 5 endpoints being simultaneously unavailable
              */
-            GOOGLE_ONLINE: "https://www.google.com/generate_204",
+            GOOGLE_ONLINE: `https://www.google.com/generate_204`,
+            CLOUDFLARE_ONLINE: `https://cp.cloudflare.com/generate_204`,
             /**
              * Basic online check, endpoints used for _online() method before any other network request
              */
             get ONLINE() {
                return  this.optIns.map(opt => this[`${opt}_PING`])
             },
-            /**
-             * Timestamp from the most recent update
-            */
-            nextUpdate: ``,
-            updatedAt: ``,
             logFile: 'updates.json',
             /**
              * Single entry array passed to _scanSync 
@@ -146,11 +146,7 @@ const Resources = Object.assign(
             /**
              * Ping response state of Promise.any list resource
              */
-            onLine: null,
-            /**
-             * Engine build mode affecting engine ready state timing on consumer startup
-             */
-            modeSync: withBuildSync,
+            mirrorOnline: null,
             /**
              * Persisted JSON updates.json log
              */
@@ -160,9 +156,26 @@ const Resources = Object.assign(
              */
             Engine: null,
             /**
-             * If the engine is already built and running, this flag stops code 0 errors
+             * Overwrites Manager.contains.isSet flag for Engine ready sate  
              */
-            isEngine: false,
+            isSet: true,
+            unreachableEmitted: false,
+            /**
+             * Update cycle adtidy-filter-mirror / Adblock-Electron
+            */
+            nextUpdate: ``,
+            updatedAt: ``,
+            jobNextRunAt: ``,
+            jobRanAt: ``,
+            /**
+             * State blocks duplicate setResources calls
+             */
+            setResourcesLock: true,
+            /**
+             * State bypasses update delay in _setUpdateScheduleEvents to immediately begin polling for 
+             * resource availability, download and engine rebuild for "hot-swap" update.
+             */
+            readyStateForced: false,
             /**
              * Filter list groups config verification. Throws on invalid list group
              */
@@ -174,6 +187,10 @@ const Resources = Object.assign(
                     groupIds.forEach(g => this.selectedLists.add(this.groupIds[g]))
                 },
         }).includeLists()
+    },
+    _fireSetUpRequired() {             
+        this.setupRequired = true
+        this.emit('adblock-setup-required') 
     },
     /**
      * @param {PromiseSettledResult[]} R - Results from Promise.allSettled
@@ -200,13 +217,6 @@ const Resources = Object.assign(
             valid: entry.valid,
             ...entry,
         })
-    },
-    /**
-     * Checks paths array length returned from initialization call to _scan()
-     * @returns Boolean
-     */
-    isFirstRun() {
-        return (this.paths.length === 0)
     },
     /**
      * @param {string} [file=''] - Optional filename to append to the Adblock userData path
@@ -245,9 +255,11 @@ const Resources = Object.assign(
     _storeJSONAsync(meta) {
         const p = this._getPath(this.logFile)
         return void fs.promises.writeFile(p, JSON.stringify(meta, null, 2), 'utf-8')
-        .then(() => {}, () => 
-            this._throwBack('ERROR', 'META_STORE', 80 ) // local store errors code 80
-        )
+        .then(() => {}, () => {
+            const isWriteable = this._writableSync(this._getPath(this.logFile))
+            if (!isWriteable) 
+                return this._throwBack('ERROR', 'WRITE_PERMISSION', 100)
+        })
     },
     /**
      * @returns {Promise<string>} Raw UTF-8 content of updates.json
@@ -334,10 +346,10 @@ const Resources = Object.assign(
         }
         catch { 
             const isWriteable = this._writableSync(this._getPath(this.logFile))
-            if (!isWriteable) return this._throwBack('ERROR', 'WRITE_PERMISSION', 80)
-            this._throwBack('ERROR', 'META_STORE', 80 ) 
+            if (!isWriteable) 
+                return this._throwBack('ERROR', 'WRITE_PERMISSION', 100)
             return false
-        }  // local store errors 80% > 50% will run but sub optimal
+        }
     },
     /**
      * @returns {void}
@@ -413,56 +425,59 @@ const Resources = Object.assign(
         };
     },
     /**
+     * Offline status last attempt to establish online status. 
+     * @returns boolean
+     */
+    _gen204() {
+        return Promise.any(
+            [this.CLOUDFLARE_ONLINE, this.GOOGLE_ONLINE].map(url =>
+                fetch(url).then(res => res.ok && res.status === 204)
+            )
+        ).then(Boolean).catch(() => false)
+    },
+    /**
      * Gates a callback behind a connectivity check, polling until online.
-     * Emits `adblock-offline` on first failed check, `adblock-online` on recovery.
      * Poll interval starts at 50ms and backs off to a max of 3500ms.
      * @param {() => void} cb - Invoked once connectivity is confirmed
      */
-    _online(cb) { 
+    _online(cb = null) { 
         const req = () =>
             Promise.any(
                 this.ONLINE.map((url) => fetch(url))
             )
-            .then(r => this.onLine = r.ok)
-            .catch(() => this.onLine = false)
+            .then(r => this.mirrorOnline = r.ok && r.status === 200)
+            .catch(() => this.mirrorOnline = false)
         let T = 50
-        let L = null
         let emitted =null
         const poll = async() => {
+             console.log('poll', this.unreachableEmitted)
             await req()
-            if (this.onLine) {
-                if (L) 
-                if (emitted) 
-                    this.emit('adblock-online')
+            if (this.mirrorOnline || this.readyStateForced) {
+                if (!cb) return
                 return void cb()
             }
-            if (!L) {
-                if (!emitted) 
+            if (!net.isOnline() && !await this._gen204())   {
+                if (!emitted) {
                     this.emit('adblock-offline')
+                }
+                    
+                    
                     emitted = true
+                    if (!cb) return
             }
-            L = true
+            if (net.isOnline() && await this._gen204()) {
+                if (!this.mirrorOnline && !this.unreachableEmitted) {
+                    this.unreachableEmitted = true
+                    this._handleResourceError('unreachable')
+                }
+                this.emit('adblock-online')
+            }
+           
             setTimeout(poll, T)
             T += 250
             if (T > 3500)  T = 1250
         }
         poll()
-    },
-    /**
-     * Tries each URL in order, normalises the response text, and validates its checksum.
-     * Returns the first valid result or `{ valid: false }` if all URLs fail.
-     * @param {string[]} urls - Ordered list of URLs to attempt
-     * @returns {Promise<{ normalized: string|null, checksum: string|null, valid: boolean }>}
-     */
-    async _fetchAndValidate(urls) {
-        for (const url of urls) {
-            const text = await fetch(url).then(r => r.text()).catch(() => null)
-            if (!text) continue
-            const { normalized, checksum } = this._normalize(text)
-            if (this._isValid(normalized, checksum))
-                return { normalized, checksum, valid: true }
-        }
-        return { valid: false, normalized: null, checksum: null }
     },
     /**
      * Races all four metadata JSON endpoints and returns the first to resolve.
@@ -480,6 +495,28 @@ const Resources = Object.assign(
         )
         .catch(() => ({ json: null, source: null }))
     },
+    /**
+     * Tries each URL in order, normalizes the response text, and validates its checksum.
+     * Returns the first valid result or `{ valid: false }` if all URLs fail.
+     * @param {string[]} urls - Ordered list of URLs to attempt
+     * @returns {Promise<{ normalized: string|null, checksum: string|null, valid: boolean }>}
+     */
+    async _fetchAndValidate(ent) {
+        const [first, second] = this.order
+        const attempt = (key) =>
+            fetch(ent[key])
+                .then(r => r.text())
+                .then(text => {
+                    const { normalized, checksum } = this._normalize(text)
+                    if (!this._isValid(normalized, checksum)) throw new Error('invalid')
+                    return { normalized, checksum, valid: true }
+                })
+        return Promise.any([attempt(first), attempt(second)])
+            .catch(() => ({ valid: false, normalized: null, checksum: null }))
+    },
+    /**
+     * Ranks HEAD request in order of fastest to slowest response time. 
+     */
     async _rankSources() {
         const probes = this.optIns.map(opt => [
             this.opts[`${opt}_PING`],
@@ -488,7 +525,10 @@ const Resources = Object.assign(
         probes[3] = ['downloadUrl', this.ADTIDY_JSON]
         const timed = await Promise.all(probes.map(async ([key, url]) => {
             const t = performance.now()
-            const ok = await fetch(url, { method: 'HEAD' }).then(r => r.ok).catch(() => false)
+            const ok = await fetch(url, {
+                method: 'HEAD',
+                signal: AbortSignal.timeout(1000)
+            }).then(r => r.ok).catch(() => false)
             return { key, ms: ok ? performance.now() - t : Infinity }
         }))
         this.order = timed.sort((a, b) => a.ms - b.ms).map(t => t.key)
@@ -502,11 +542,9 @@ const Resources = Object.assign(
     _processLists(lists, branch) {
         this._rankSources().then(() =>
             Promise.allSettled(
-                lists.map((ent) => {
-                    if ((!ent.toUpdate || ent.expires > Date.now()) && this.paths.includes(ent.storePath)) return
-                    return this._fetchAndValidate(
-                        this.order.map(k => ent[k]),
-                        ent.filterId
+                lists.map((ent) => 
+                    this._fetchAndValidate(
+                        ent
                     )
                     .then(({ normalized, checksum, valid }) => {
                         if (!valid)
@@ -515,14 +553,14 @@ const Resources = Object.assign(
                         this._metaMap({ ...ent, checksum: checksum, valid })
                         return { filterId: ent.filterId, valid, checksum }
                     })
-                })
+                )
             )
         )
         .then(R => {
-            if (this.isFirstRun()) {
+            if (this.paths.length) {
                 const percent = this._failRate(R)
                 if (percent > 0)
-                    this._throwBack('ERROR', 'RESOURCE_DOWNLOAD', 100 - percent)
+                    this._handleResourceError()
             }
             void this[branch]()
         })
@@ -578,16 +616,10 @@ const Resources = Object.assign(
      */
     _init(isCache) {
         const fStart = () => {
+            if (this.readyStateForced) return
+            this._fireSetUpRequired()
             this._freshCacheDirSync()
-            void this._online(
-                ()=> 
-                this._getMeta()    
-                .then(({ json, source }) => {
-                    if (!json) 
-                        return this._throwBack('ERROR', 'METADATA_REQUEST' , 0)
-                    void this._processLists(this._listMeta(json, source), '_ready')
-                })
-            )
+            this._runUpdateMeta(false)
         }
         if (!isCache || !this.paths.length)  return fStart()
         this._readJSONAsync()
@@ -596,6 +628,7 @@ const Resources = Object.assign(
             this.nextUpdate = this.log.nextUpdate
             this.updatedAt = this.log.updatedAt
             const isRebuild = this.log.reckon > 0 && this.log.reckon !== this.paths.length
+            this.setupRequired = isRebuild
                 let lists = []        
                 const cStart = () => Promise.allSettled( 
                     this.log.filters.map(
@@ -619,26 +652,22 @@ const Resources = Object.assign(
                         return this._processLists(lists, '_ready')
                     return this._ready()
                 })
+                this._online(null)
                 isRebuild ? void this._online(cStart) : cStart()
         })
         .catch(()=> fStart())        
     },
     /**
-     * Builds the Adguard engine from all entries in `listMap`.
-     * Defaults to `createAsync` when no argument is passed to `setResources`.
-     * `hotUpdateOverride` forces `createAsync` on hot updates so a mid-session rebuild
-     * never blocks the consumer even when `modeSync` is `true`.
-     * @param {string|null} [hotUpdateOverride=null]
+     * Builds the Adguard engine asynchronously from all entries in `listMap`.
      * @returns {Engine|Promise<Engine>}
      */
-    _buildAdguardEngine(hotUpdateOverride = null) {
+    _buildAdguardEngine() {
         setConfiguration({
             engine: 'extension',
             version: '1.0.0',
             verbose: false
         });
-        if (!this.paths.length) hotUpdateOverride = 'createAsync'
-        return Engine[hotUpdateOverride ?? (this.modeSync ? 'createSync' : 'createAsync')]({
+        return Engine.createAsync({
              filters:[...this.listMap.entries()]
             .map(([k,v]) => {
                 return {
@@ -653,18 +682,18 @@ const Resources = Object.assign(
      * @returns {Promise<void>}
      */
     async _ready() {
-        this.Engine = this.modeSync ? this._buildAdguardEngine() : await this._buildAdguardEngine()
+        console.log('_ready')
+        this.Engine = await this._buildAdguardEngine()
+        this.setupRequired = false;
         this.emit('adblock-resources', this);
-        this.isEngine = true
     },
     /**
      * Rebuilds the engine with updated filter lists and emits `adblock-lists-update`.
      * @returns {Promise<void>}
      */
     async _update() {
-        this.Engine =  await this._buildAdguardEngine('createAsync')
+        this.Engine = await this._buildAdguardEngine()
         this.emit('adblock-lists-update', this);
-        this.isEngine = true
     },
     /**
      * Registers a one-time listener for `adblock-resources` and emits `adblock-create-ready`.
@@ -672,8 +701,10 @@ const Resources = Object.assign(
      * @returns {void}
      */
     _resourcesReady(callback) {
-        this.on('adblock-resources', callback);
-        this.emit('adblock-create-ready');
+        this.on('adblock-resources', (props) => {
+            callback(props);
+            this.emit('adblock-create-ready');
+        });
     },
     /**
      * Registers a listener for `adblock-lists-update`.
@@ -683,6 +714,30 @@ const Resources = Object.assign(
     _listsUpdated(callback) {
         this.on('adblock-lists-update', callback);
     },
+    _handleResourceError(err) {
+        this._scanAsync(this.ext[0])
+        .then((paths)=> {
+            const percentInCache = 100 - (this.log?.reckon - paths.length) * (this.log?.reckon / 100)
+            this._throwBack('ERROR', err === 'unreachable' ?  'RESOURCE_OFFLINE' : 'RESOURCE_DOWNLOAD', (!isNaN(percentInCache) && Number.isFinite(percentInCache)) ? Math.round(percentInCache) : 0)
+        })
+    },
+    /**
+     * Triggers a metadata request and processes the response.
+     * Called internally by `_setUpdateScheduleEvents`.
+     * @returns {void}
+     */
+    _runUpdateMeta(update) {
+        this.paths = []
+        return void this._online(
+            ()=> 
+            this._getMeta()    
+            .then(({ json, source }) => {
+                    if (!json) 
+                        return this._handleResourceError()
+                void this._processLists(this._listMeta(json, source), update? '_update': '_ready')
+            })
+        )
+    },
     /**
      * Checks how long ago the last update was and either triggers an update
      * cycle or schedules one for when the remaining time elapses.
@@ -691,24 +746,32 @@ const Resources = Object.assign(
      * @param {number} [next] - Ms until `nextUpdate`; defaults to live calculation
      * @returns {void}
      */
-    _setUpdateScheduleEvents(
-        next = Date.parse(this.nextUpdate) - Date.now(),
-        last = Math.abs(Date.now() - Date.parse(this.updatedAt)) / 3_600_000
-    ) {
-        if ((next && next <= 0) || (last && last > 13)) {
-            this.paths = []
-            return void this._online(
-                ()=> 
-                this._getMeta()    
-                .then(({ json, source }) => {
-                    if (!json) 
-                        return this._throwBack('ERROR', 'METADATA_REQUEST' , 80)
-                    void this._processLists(this._listMeta(json, source), '_update')
-                })
-            )
-        }
-        if (next <= 0) next = 2 * 3_600_000
-        setTimeout(() => this._setUpdateScheduleEvents(), next)
+    _setUpdateScheduleEvents() {       
+        if (this.readyStateForced) {
+            console.log('forceReady Success calling _runUpdateMeta')
+            this.readyStateForced = false
+            return this._runUpdateMeta(true)
+        }     
+        let updateTimer = 0
+        const doUpdate = (Date.parse(this.nextUpdate) - Date.now())
+        const pastDeadline = (Date.parse(this.jobNextRunAt) - Date.now())
+        if (Number.isFinite(pastDeadline) && (pastDeadline < 0)) 
+            updateTimer = 2 * 3_600_000
+        else
+        if (
+            Number.isFinite(pastDeadline) 
+            && (pastDeadline >= 0) && 
+            Number.isFinite(doUpdate) 
+            && (doUpdate <= 0)
+        ) return this._runUpdateMeta(true)
+        else
+        if (Number.isFinite(doUpdate) && !(doUpdate <= 0)) 
+            updateTimer = doUpdate
+        else
+        if (!Number.isFinite(doUpdate) || !Number.isFinite(pastDeadline))
+            updateTimer = 2 * 3_600_000
+        
+        setTimeout(()=> this._runUpdateMeta(true), updateTimer)
     },
     /**
      * Persists all valid, in-memory filter lists to disk once the engine is ready.
@@ -757,8 +820,7 @@ const Resources = Object.assign(
                 const rate = this._failRate(R)
                 if (rate > 0) {
                     if (!this._writableSync(this._getPath(this.logFile))) 
-                        return this._throwBack('ERROR', 'WRITE_PERMISSION', 80)
-                    if (!update) return this._throwBack('ERROR', 'RESOURCE_WRITE', 100 - rate)
+                        return this._throwBack('ERROR', 'WRITE_PERMISSION', 100)
                 }
             })
             .then(()=>
@@ -771,21 +833,23 @@ const Resources = Object.assign(
                             )
                         )
                         .then(res => {
-                            if (!res.some(r => r.status === 'fulfilled')) return
                             const updatedAtMap = new Map()
                             const nextUpdateMap = new Map()
+                            const jobNextRunAtMap = new Map()
+                            const jobRanAtMap = new Map()
                             res.forEach(t=> {
                                 if (t.status === 'fulfilled') {
+                                    jobRanAtMap.set(Date.parse(t.value.jobRanAt), t.value.jobRanAt)
+                                    jobNextRunAtMap.set(Date.parse(t.value.jobNextRunAt), t.value.jobNextRunAt)
                                     updatedAtMap.set(Date.parse(t.value.updatedAt), t.value.updatedAt)
                                     nextUpdateMap.set(Date.parse(t.value.nextUpdate), t.value.nextUpdate)
-                                    
                                 }
                             })
+                                this.jobRanAt = jobRanAtMap.get(Math.max(...jobRanAtMap.keys())) ?? null
+                                this.jobNextRunAt = jobNextRunAtMap.get(Math.max(...jobNextRunAtMap.keys())) ?? null
                             if (!this.nextUpdate || update) {
-                                console.log(updatedAtMap, nextUpdateMap, nextUpdateMap.get(Math.max(...nextUpdateMap.keys())) )
-                                this.nextUpdate = nextUpdateMap.get(Math.max(...nextUpdateMap.keys()))
-                                this.updatedAt = updatedAtMap.get(Math.max(...updatedAtMap.keys()))
-                                console.log(this.nextUpdate, this.updatedAt)
+                                this.nextUpdate = nextUpdateMap.get(Math.max(...nextUpdateMap.keys())) ?? null
+                                this.updatedAt = updatedAtMap.get(Math.max(...updatedAtMap.keys())) ?? null
                                 this._setStoredMeta()
                             }
                             return this._setUpdateScheduleEvents()
@@ -805,22 +869,10 @@ const Resources = Object.assign(
         this.on('adblock-lists-update', ()=> this._runMaintain(true))
         this.once('adblock-resources', ()=> this._runMaintain())
     },
-    /**
-     * On `adblock-offline`, checks whether cached lists are absent or incomplete.
-     * If so, confirms connectivity via `GOOGLE_ONLINE` and emits `adblock-error`
-     * with code `OFFLINE` — `successRate: 0` if reachable, `100` if unreachable.
-     * @returns {void}
-     */
-    _checkNotIsEngine() {
-        this.on('adblock-offline',() => {
-        if (!this.paths.length || this.paths.length < this.log?.reckon && !this.isEngine)
-            fetch(this.GOOGLE_ONLINE)
-            .then((res)=> {
-                if (res.ok && res.status === 204)
-                        this._throwBack('ERROR', `OFFLINE`, 0)
-            })
-            .catch(()=> this._throwBack('ERROR', `OFFLINE`, 100))
-        })
+
+    _forceReady() {
+        this.readyStateForced = true
+        return void this._ready()
     }
 });
 

@@ -27,29 +27,17 @@ const CDP = {
     );
   },
 /**
- * Tells debugger to resume execution.
- */
-  resume(sessionId) {
-    return (
-        this.cmd(
-            'Debugger.resume', 
-            {}, 
-            sessionId
-        ) 
-    )        
-  },
-/**
  * Evaluates expression on global object.
  */
  evaluate(expression, sessionId) {
     return (
-        this.cmd(
-            'Runtime.evaluate', 
-            { 
-                expression 
-            }, 
-            sessionId
-        )
+      this.cmd(
+          'Runtime.evaluate', 
+          { 
+              expression 
+          }, 
+          sessionId
+      )
     )
   },
 /**
@@ -108,6 +96,7 @@ const CDP = {
         if (!params?.frameId) return
         this.frameToSessionId.set(params.frameId, sessionId)
       }
+    
     },
 /**
  * Target Chrome DevTools Protocol
@@ -142,19 +131,24 @@ const CDP = {
          // then derived by removing the numerical characters and appending sc or st for script or stylesheet.
          // the targetInfoChanged event / method plays a crucial role in the injection control flow and in this 
          // implementation, facilitates reliable and timely injection to cross origin frames / documents.
-            const { targetId, type, url  } = params.targetInfo
-            if (type !== 'iframe') {
-                this._agMainFrame(
-                    this.agFilters(url, type), 
-                    targetId,
-                   'main'
-                )
-            }
-            this._agChildFrame(
-                this.agFilters(url, type), 
+          const { targetId, type, url  } = params.targetInfo
+          const f = type === 'iframe' ? 'subFrame' : 'mainFrame'
+          if (type !== 'iframe') {
+              this._agMainFrame(
+                this.agFilters(url, f, 'main'), 
                 targetId,
-                this.frameToSessionId.get(targetId)
+                'main'
+              )
+          }
+          else 
+          {
+            const session = this.frameToSessionId.get(targetId)
+            this._agSubFrame(
+              this.agFilters(url, f, session), 
+              targetId,
+              session
             )
+          }
         }
     },
     /**
@@ -167,26 +161,6 @@ const CDP = {
          */
         frameDetached(params, _) {
             this.frameToSessionId.delete(params.frameId)
-        }
-    },
-    /**
-     * Debugger Chrome Devtools Protocol
-     */
-    Debugger: {
-    /**
-     * Fired when the virtual machine stopped on breakpoint or exception or any other stop criteria.
-     * 
-     * Intercepts a sites attempts to block devtools by immediately resuming on Debugger paused.
-     */
-        paused(_, sessionId) {
-            if (!this.withDebuggerResume) return
-            this.resume(sessionId)
-            .then(()=> {
-                if (this.withConsole) console.log(`AG intercepted debugger pause`)
-            })
-            .catch(()=>{
-                if (this.withConsole) console.log(`AG failed to intercept debugger pause`)
-            })
         }
     },
     /**
@@ -205,9 +179,10 @@ const CDP = {
         if (activeCheck.enabled) {
           if (sessionId === 'main') {
               const [frameId, _] = [...this.frameToSessionId.entries()].find(([f, s]) => s === sessionId)
+              const url = this.webContents.getURL()
               this._agMainFrame(
-                  this.agFilters(this.webContents.getURL(), 'main_frame'), 
-                  frameId,
+                this.agFilters(url, 'mainFrame', 'main'), 
+                frameId,
                 'main'
               )
           }

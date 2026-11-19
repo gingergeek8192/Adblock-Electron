@@ -1,5 +1,5 @@
 # Adblock-Electron
-## IN ACTIVE DEVELOPMENT DECOUPLE FROM CONSUMER APPLICATION. DO NOT USE THIS PACKAGE YET
+## FURTHER DEVELOPMENT. DO NOT USE THIS REPO.
 An Electron adblocking package built on AdGuard's `tsurlfilter` engine.
 
 - **No IPC.**
@@ -49,6 +49,24 @@ Additional third-party filter list support is planned.<br> Results shown below u
 
 
 ---
+## 🔒 Recommended `webPreferences`
+
+Adblock-Electron injects cosmetic CSS and JS into every frame, including cross-origin iframes. It needs no preload and no Node access, so use a locked-down window:
+
+```js
+
+webPreferences: {
+  sandbox: true,
+  contextIsolation: true,
+  nodeIntegration: false,
+  webSecurity: true,
+  nodeIntegrationInSubFrames: false // ❗ Never set true    
+                                    // no preload required
+}
+
+```
+
+ Enabling `nodeIntegration` or `nodeIntegrationInSubFrames` gives untrusted frames access to Node, which allows remote code execution from any site or ad frame.
 
 <br> <br>
 
@@ -60,14 +78,43 @@ Adblock-Electron `withConsole` logs instance initialization events, lifecycle an
 <summary>View Logs </summary>
 
 ```js
+
 ────────────────────────────────────────────────────────────────────────
   HANDLER INITIALIZATION
 ────────────────────────────────────────────────────────────────────────
 {
-  setWindowOpenHandler: { registered: true, withWindowOpenHandler: true, owner: 'consumer' },
-  onBeforeRequest: { registered: true, withBeforeRequest: true, owner: 'consumer' }
+  setWindowOpenHandler: { registered: true, withWindowOpenHandler: false, owner: 'adblock' },
+  onBeforeRequest: { registered: true, withBeforeRequest: false, owner: 'adblock' }
 }
 ────────────────────────────────────────────────────────────────────────
+
+
+────────────────────────────────────────────────────────────────────────
+  COSMETIC INJECTION
+────────────────────────────────────────────────────────────────────────
+{
+  type: 'CSS',
+  frameId: '2C8AFEB26CAC865974781E93ACEAFB73',
+  sessionId: 'main',
+  frame: 'main_frame',
+  injected: true
+}
+────────────────────────────────────────────────────────────────────────
+
+
+────────────────────────────────────────────────────────────────────────
+  SCRIPTLET INJECTION
+────────────────────────────────────────────────────────────────────────
+{
+  type: 'JS',
+  frameId: '2C8AFEB26CAC865974781E93ACEAFB73',
+  sessionId: 'main',
+  frame: 'main_frame',
+  injected: true
+}
+────────────────────────────────────────────────────────────────────────
+
+
 ────────────────────────────────────────────────────────────────────────
   MAIN_FRAME CAPABILITY
 ────────────────────────────────────────────────────────────────────────
@@ -76,7 +123,6 @@ Adblock-Electron `withConsole` logs instance initialization events, lifecycle an
   Capability: 'fullSet',
   Protocols: [
     { Protocol: 'Network', Enabled: true },
-    { Protocol: 'Debugger', Enabled: true },
     { Protocol: 'DOM', Enabled: true },
     { Protocol: 'Runtime', Enabled: true },
     { Protocol: 'Target', Enabled: true },
@@ -87,68 +133,123 @@ Adblock-Electron `withConsole` logs instance initialization events, lifecycle an
   Inactive: []
 }
 ────────────────────────────────────────────────────────────────────────
+
+
 ────────────────────────────────────────────────────────────────────────
   COSMETIC INJECTION
 ────────────────────────────────────────────────────────────────────────
 {
   type: 'CSS',
-  frameId: '346911B95404753EB33539501326C57D',
+  frameId: '2C8AFEB26CAC865974781E93ACEAFB73',
   sessionId: 'main',
   frame: 'main_frame',
   injected: true
 }
 ────────────────────────────────────────────────────────────────────────
+
+
 ────────────────────────────────────────────────────────────────────────
-  COSMETIC INJECTION
+  SCRIPTLET INJECTION
 ────────────────────────────────────────────────────────────────────────
 {
-  type: 'SCRIPT',
-  frameId: '346911B95404753EB33539501326C57D',
+  type: 'JS',
+  frameId: '2C8AFEB26CAC865974781E93ACEAFB73',
   sessionId: 'main',
   frame: 'main_frame',
   injected: true
 }
 ────────────────────────────────────────────────────────────────────────
+
+
 ────────────────────────────────────────────────────────────────────────
   SUB_FRAME CAPABILITY
 ────────────────────────────────────────────────────────────────────────
 {
-  sessionId: 'D13136189FFB8591666C43A02A8562C3',
+  sessionId: '29CD4242FA6CE52EA2729189FA87FA4C',
   Capability: 'fullSet',
   Protocols: [
     { Protocol: 'Network', Enabled: true },
-    { Protocol: 'Debugger', Enabled: true },
     { Protocol: 'DOM', Enabled: true },
     { Protocol: 'Runtime', Enabled: true },
     { Protocol: 'Target', Enabled: true }
   ],
   AutoAttach: true,
-  Active: [ 'main', 'D13136189FFB8591666C43A02A8562C3' ],
+  Active: [ 'main', '29CD4242FA6CE52EA2729189FA87FA4C' ],
   Inactive: []
 }
 ────────────────────────────────────────────────────────────────────────
+
+
 ────────────────────────────────────────────────────────────────────────
   COSMETIC INJECTION
 ────────────────────────────────────────────────────────────────────────
 {
   type: 'CSS',
-  frameId: 'CC939D2141ED95A8BAD9B43233504826',
-  sessionId: 'D13136189FFB8591666C43A02A8562C3',
+  frameId: 'FD2A4DD19E307F0ACB77392A11D39307',
+  sessionId: '29CD4242FA6CE52EA2729189FA87FA4C',
   frame: 'sub_frame',
   injected: true
 }
 ────────────────────────────────────────────────────────────────────────
+
+
+────────────────────────────────────────────────────────────────────────
+  SCRIPTLET INJECTION
+────────────────────────────────────────────────────────────────────────
+{
+  type: 'JS',
+  frameId: 'FD2A4DD19E307F0ACB77392A11D39307',
+  sessionId: '29CD4242FA6CE52EA2729189FA87FA4C',
+  frame: 'sub_frame',
+  injected: true
+}
+────────────────────────────────────────────────────────────────────────
+
+
+────────────────────────────────────────────────────────────────────────
+  SUB_FRAME CAPABILITY
+────────────────────────────────────────────────────────────────────────
+{
+  sessionId: '3DB20DBD07F1AF4580DBB47C361C0E3D',
+  Capability: 'fullSet',
+  Protocols: [
+    { Protocol: 'Network', Enabled: true },
+    { Protocol: 'DOM', Enabled: true },
+    { Protocol: 'Runtime', Enabled: true },
+    { Protocol: 'Target', Enabled: true }
+  ],
+  AutoAttach: true,
+  Active: [ 'main', '29CD4242FA6CE52EA2729189FA87FA4C', '3DB20DBD07F1AF4580DBB47C361C0E3D' ],
+  Inactive: []
+}
+────────────────────────────────────────────────────────────────────────
+
+
 ────────────────────────────────────────────────────────────────────────
   COSMETIC INJECTION
 ────────────────────────────────────────────────────────────────────────
 {
-  type: 'SCRIPT',
-  frameId: 'CC939D2141ED95A8BAD9B43233504826',
-  sessionId: 'D13136189FFB8591666C43A02A8562C3',
+  type: 'CSS',
+  frameId: '21B523093CCFF2832A154064B8A6D46E',
+  sessionId: '3DB20DBD07F1AF4580DBB47C361C0E3D',
   frame: 'sub_frame',
   injected: true
 }
 ────────────────────────────────────────────────────────────────────────
+
+
+────────────────────────────────────────────────────────────────────────
+  SCRIPTLET INJECTION
+────────────────────────────────────────────────────────────────────────
+{
+  type: 'JS',
+  frameId: '21B523093CCFF2832A154064B8A6D46E',
+  sessionId: '3DB20DBD07F1AF4580DBB47C361C0E3D',
+  frame: 'sub_frame',
+  injected: true
+}
+────────────────────────────────────────────────────────────────────────
+
 ```
 
 </details>
@@ -194,7 +295,7 @@ The Adblock `tsurlfilter` engine must be initialized before Adblock instantiatio
 - Specific filter group IDs `withGroups` (default all groupIds), 
 - Language: `withLanguageSpecific` (default English)
 - Build mode: synchronous / asynchronous `withBuildSync` (default Async)
-- Consumer-controlled filter mirror `withOwnMirror`  Accepts an account (user-name) and optIns array specifying enabled providers [`GITHUB`, `GITLAB`, `JSDELIVR`]
+- Consumer-controlled filter mirror `withCloneMirror`  Accepts an account (user-name) and optIns array specifying enabled providers [`GITHUB`, `GITLAB`, `JSDELIVR`]
 <br>
 
 
@@ -263,7 +364,7 @@ Adblock.setResources({
         "Language"
     ], // default all filter list groupIds included
 
-    withOwnMirror: { 
+    withCloneMirror: { 
       account: 'your-username', // details on adtidy-filter-mirror
       optIns: [
           `JSDELIVR`,
@@ -338,7 +439,6 @@ With `withBuildSync: false` (default), the engine builds asynchronously and `cre
 | `withAllowIncludesArray` | `string[]` | `[]` | URL substrings allowed. Takes priority over `withBlockIncludesArray`. |
 | `withBlockIncludesArray` | `string[]` | `['devtools', 'devtool']` | URL substrings blocked. |
 | `withAutoAttachFilter` | `Object[]` | `workers` | Attachment types excluded from interception. Defaults to `service_worker`, `shared_worker`, and `worker`. |
-| `withDebuggerResume` | `boolean` | `true` | Auto-resume debugger-paused targets. Enabled by default. |
 | `withConsole` | `boolean` | `false` | Diagnostic console output. |
 
 <br>
@@ -348,7 +448,7 @@ With `withBuildSync: false` (default), the engine builds asynchronously and `cre
 Adblock-Electron originated from a practical requirement: removing advertising, trackers, and intrusive pop-ups from streaming sites while providing the ability to inspect their source.<br>
 Many streaming sites employ techniques intended to interfere with developer tools, including debugger traps, execution pauses, console manipulation, and scripts designed to detect DevTools activity.<br>
 Adblock-Electron incorporates mechanisms to counteract this interference, including automatic debugger resumption, protection against console clearing, and targeted blocking of DevTools-related scripts and requests.<br>
-These requirements directly influenced several of the available configuration options, particularly `withBlockIncludesArray` and `withDebuggerResume`. The related `withAutoAttachFilter` option was also shaped by these requirements to ensure the package targets the correct frame types.<br>
+These requirements directly influenced several of the available configuration options, particularly `withBlockIncludesArray`. The related `withAutoAttachFilter` option was also shaped by these requirements to ensure the package targets the correct frame types.<br>
 What began as a solution to a specific problem evolved into an independent adblocking implementation for Electron, with network filtering, cross-origin cosmetic filtering, and script injection.
 
 </details>
@@ -383,7 +483,6 @@ Adblock.createReady(() =>
         withBlockIncludesArray: ["devtools", "devtool"], // Blocks 
         withBeforeRequest: false,
         withWindowOpenHandler: false,
-        withDebuggerResume: true, // Counteracts sites deliberately pausing execution when they detect DevTools (e.g. streaming sites).
         withAutoAttachFilter: [ // Stops Adblock-Electron targeting workers.
             { type: "service_worker", exclude: true },
             { type: "shared_worker", exclude: true },
@@ -459,42 +558,18 @@ Adblock-Electron dynamically exposes its `setWindowOpenHandler(()=>{})` method o
 
 The callback receives an `openWindow(boolean)` method for setting the window-opening decision:
 
-<br>
-
 - `openWindow(true)` — allows window creation (`{ action: "allow" }`)
 - `openWindow(false)` — denies window creation (`{ action: "deny" }`)
 
-<br>
+The consumer has full control over the window-opening decision and can implement their own policies using the details supplied by Electron, including URL comparisons, referrer validation, or any combination of custom conditions.
 
-The consumer has full control over the window-opening decision and can use `blocker.match(url)`, direct string comparisons, referrer validation, or any combination of custom conditions.
-The consumer can therefore implement their own window-opening policies without relying on Adblock's URL matching.
-
-<br>
-
----
-
-Using Adblock's matching engine
-
-```js
-
-Adblock.setWindowOpenHandler(
-  win.webContents,
-
-    (blocker, { url }) => {
-        blocker.openWindow(
-          !blocker.match(url) // match() returns true when the URL is blocked
-        ) 
-    }
-
-)
-
-```
+This handler is intended for consumer-defined window-opening policies. It does not invoke AdGuard's URL matching engine.
 
 <br>
 
 ---
 
-Using custom conditions
+**Using custom conditions**
 
 ```js
 
@@ -504,16 +579,17 @@ Adblock.setWindowOpenHandler(
     (blocker, { url, referrer }) => {
 
         blocker.openWindow(
+            url !== 'about:blank' &&
             url === myURL &&
-            referrer === mySafeReferrer
+            referrer.url === mySafeReferrer
         )
 
     }
 )
 
 ```
----
 
+---
 <br>
 
 ## `urlReady(()=>{})` 🚀
@@ -546,3 +622,118 @@ Individual endpoint failures are handled internally wherever possible.
 Adblock-Electron's `onActionableResourceEvent()` exposes conditions requiring host-application awareness, including ***resource availability***, ***filesystem access***, ***persistence failures*** and ***online connectivity***.
 <br>
 Events include an error code and operational percentage, allowing the host application to determine whether intervention is necessary without making resource failures fatal to the application.
+
+---
+
+## 🧩 Injected Scriptlet Reference
+
+Adblock-Electron's cosmetic `SCRIPT` injection — visible in the logs above as `COSMETIC INJECTION` with `type: 'SCRIPT'` — delivers AdGuard scriptlets into the `main_frame` and every `sub_frame`, cross-origin included. No preload and no IPC are involved.
+
+The scriptlets below document the API surface modified by the default injected payload. They exist purely to neuter privacy-sensitive browser APIs that are commonly used for fingerprinting and ad targeting.
+
+<br>
+
+### ⚙️ Scriptlet Summary
+
+| # | Scriptlet | Arguments | API Target | Result |
+|---|---|---|---|---|
+| 1 | `set-constant` | `navigator.getBattery`, `noopPromiseResolve` | `navigator.getBattery` | Thenable returning a `Response`, never a `BatteryManager` |
+| 2 | `no-topics` | — | `Document.prototype.browsingTopics` | Resolves to a `Response` whose body is `"[]"` |
+| 3 | `set-constant` | `navigator.privateAttribution`, `undefined` | `navigator.privateAttribution` | Getter returns `undefined` |
+| 4 | `no-protected-audience` | — | `Navigator.prototype` ad-auction methods | Stubbed; no real auction operations |
+
+<br>
+
+### 🔋 `set-constant` → `navigator.getBattery`
+
+Walks `window.navigator.getBattery` and redefines it via `Object.defineProperty`.
+
+- The original `BatteryManager`-returning function is replaced with `noopPromiseResolve`.
+- `navigator.getBattery()` therefore returns a `Promise` resolving to a `Response` (body `"{}"`, status `200 OK`), or `undefined` if `Response` is unavailable.
+
+<details>
+<summary>Effective replacement 📋</summary>
+
+```js
+navigator.getBattery = function noopPromiseResolve() {
+  const response = new Response("{}", {
+    headers: { "Content-Length": "2" },
+    status: 200,
+    statusText: "OK"
+  })
+  return Promise.resolve(response)
+}
+```
+
+</details>
+
+Returning a `Response` rather than a `BatteryManager` is deliberate: the spoof must remain thenable so calling code does not throw, while never exposing real `charging`, `level`, `chargingTime`, or `dischargingTime` values.
+
+<br>
+
+### 🧠 `no-topics` → `document.browsingTopics()`
+
+If `Document.prototype.browsingTopics` exists as an own function, it is replaced:
+
+```js
+Document.prototype.browsingTopics = function () {
+  return noopPromiseResolve("[]")
+}
+```
+
+The real Topics API returns `Promise<number[]>`; this returns a `Promise` resolving to a `Response` whose body is `"[]"`. Topic observation and retrieval are effectively disabled.
+
+<br>
+
+### 🕵️ `set-constant` → `navigator.privateAttribution`
+
+The second `set-constant` scriptlet targets the Private Attribution API:
+
+- If the property exists, its getter is replaced.
+- If it does not exist, an own getter returning `undefined` is created on `navigator`.
+- No functional attribution object is ever exposed.
+
+<br>
+
+### 📢 `no-protected-audience` → `Navigator.prototype`
+
+Checks `Navigator.prototype` for each method below and replaces it only if it exists as an own function:
+
+| Method | Replacement Behavior |
+|---|---|
+| `joinAdInterestGroup` | `Promise.resolve(undefined)` |
+| `runAdAuction` | `Promise.resolve(null)` |
+| `leaveAdInterestGroup` | `Promise.resolve(undefined)` |
+| `clearOriginJoinedAdInterestGroups` | `Promise.resolve(undefined)` |
+| `createAuctionNonce` | `""` |
+| `updateAdInterestGroups` | `undefined` |
+
+<details>
+<summary>Why stub instead of delete? 📋</summary>
+
+Deleting the methods would make `typeof navigator.runAdAuction === "undefined"`, which is itself a detectable signal. Stubbing preserves the expected shape (`typeof … === "function"`) while guaranteeing that no interest group is joined and no auction is run.
+
+</details>
+
+<br>
+
+### 🛠️ Shared Scriptlet Mechanics
+
+- **Duplicate-injection guard** — each scriptlet registers a flag on `Window.prototype.toString` keyed by `source.uniqueId + source.name + args`, so repeated injection into the same realm is a no-op.
+- **`try/catch` wrapper** — a failure in one scriptlet cannot break the others or the page.
+- **`verbose: false`** — no console traces are emitted in the shipped configuration.
+- **`engine: "extension"`** — these are distributed as extension-style scriptlets rather than corelibs rules.
+
+<br>
+
+### 📋 Result
+
+> `navigator.getBattery` is spoofed, `document.browsingTopics()` returns an empty topic set, `navigator.privateAttribution` is `undefined`, and the Protected Audience / FLEDGE surface is stubbed. The page continues to execute normally, but the targeted APIs can no longer be used for fingerprinting or ad targeting.
+
+<br>
+
+---
+
+
+
+MU NOTES: ONLY 1 WINDOW INSTANCE CAN call setResources(). The event will trigger all windows to open. 

@@ -1,34 +1,7 @@
 import { BrowserWindow, app } from 'electron'
 import Manager from './Manager.js'
-import { URL } from '../helpers/url-parser/index.js'
 
 const Events = {
-    
-  // did-frame-finish-load:
-  //        ["loaded-url", this.webContents.getURL()],
-  //        ["loading-url", null],
-  //        ["did-start-loading", false],
-  //        ["did-frame-finish-load", true],
-  //        ["did-start-navigation", false],
-
-  // did-start-loading
-  //        ["loaded-url", null],
-  //        ["loading-url", null],
-  //        ["did-start-loading", true],
-  //        ["did-frame-finish-load", false],
-  //        ["did-start-navigation", false],
-
-  // did-start-navigation: 
-  //          for (const [k, v] of [
-  //            ["loaded-url", null],
-  //            ["loading-url", url],
-  //            ["did-start-loading", true],
-  //            ["did-frame-finish-load", false],
-  //            ["did-start-navigation", true],
-  //            ["mainFrame-injected", null]
-  //          ])
-  //            this.mainLoadEventMap.set(k, v);
-
   /**
    * Cleans up the Adblock instance on window close.
    * Defers registration via `browser-window-created` if the window does not yet exist.
@@ -38,17 +11,16 @@ const Events = {
     let win = BrowserWindow.fromWebContents(this.webContents);
     const onClose = () =>
       win.on("closed", () => {
-        if (this.sessionMonitorTimeout) {
-          clearTimeout(this.sessionMonitorTimeout);
-          this.sessionMonitorTimeout = null;
-        }
-        if (this.webContents.debugger.isAttached() && win && !win.isDestroyed()) this.webContents.debugger.detach();
-        if (!this.webContents.isDestroyed()) this.webContents.destroy();
-        if (win && !win.isDestroyed()) win.destroy();
-        if (Manager.register.has(this.id)) Manager.register.delete(this.id);
-        if (Manager.register.size === 0) this.emit('window-handler-reset')
+          if (this.sessionMonitorTimeout) {
+              clearTimeout(this.sessionMonitorTimeout);
+              this.sessionMonitorTimeout = null;
+          }
+          if (!this.webContents.isDestroyed() && this.webContents.debugger.isAttached()) this.webContents.debugger.detach();
+          if (!this.webContents.isDestroyed()) this.webContents.destroy();
+          if (win && !win.isDestroyed()) win.destroy();
+          if (Manager.register.has(this.id)) Manager.register.delete(this.id);
+          if (Manager.register.size === 0) this.emit('window-handler-reset')
       });
-
     if (win && !win.isDestroyed()) onClose();
     else
       app.once("browser-window-created", () => {
@@ -100,9 +72,9 @@ const Events = {
             .then(({ frameTree }) => {
               if (frameTree) {
                 callBack(
-                  this.agFilters(url, "mainFrame"),
+                  this.agFilters(url, 'mainFrame', 'main'),
                   frameTree?.frame?.id,
-                  "main",
+                  "main"
                 );
               }
             })
@@ -124,7 +96,7 @@ const Events = {
   /**
    * Registers `webContents.setWindowOpenHandler`.
    * `withWindowOpenHandler: false` — denies all window-open requests internally.
-   * `withWindowOpenHandler: true` — emits `open-allow` with `(instance, details)`; decision set via `openWindow()`.
+   * `withWindowOpenHandler: true` — emits `adblock-setWindowOpenHandler-ready` with `(instance, details)`; decision set via `openWindow()`.
    * @returns {void}
    */
   _windowOpenHandler() {
@@ -133,7 +105,7 @@ const Events = {
         // window handling was explicitly enabled. Otherwise, retain
         // the throwing placeholder to enforce the initialisation contract.
       return this.webContents.setWindowOpenHandler((details) => {
-        this.emit("open-allow", this, details);
+        this.emit("adblock-setWindowOpenHandler-ready", this, details);
         return this.allow ? { action: "allow" } : { action: "deny" };
       });
     }
@@ -151,47 +123,20 @@ const Events = {
         { urls: ["http://*/*", "https://*/*"] },
         ({ url, resourceType } = details, cb) => {
           if (!url) return cb({});
-          // For streaming sites with undefined hostname (common for whatever reason).
-          // Allows page to load instead of hanging hidden.... 
-          // Electron will still complain via terminal.
-          if (url && new URL(url).hostname.includes("undefined")) 
-            return cb({ cancel: true });
-          if (
-            this.agMatch(url, resourceType) &&
-            // Takes priority over block includes
-            !this.withAllowIncludesArray.some((allow) => url.includes(allow))
-          ) return cb({ cancel: true });
+          if  (this.withAllowIncludesArray.some((allow) => url.includes(allow))) return cb({});
+          // For streaming sites with undefined domain (common).
+          if (url && new this.AdblockURL(url).domain.includes("undefined")) return cb({ cancel: true });
+          if (this.agMatch(url, resourceType)) return cb({ cancel: true });
           if (this.withBlockIncludesArray.some((block) => url.includes(block)))
             return cb({ cancel: true });
           cb({});
         },
       );
     }
-
     this.onBeforeRequest = this.webRequest.onBeforeRequest.bind(
       this.webRequest,
     );
     return this.onBeforeRequest;
-  },
-
-  _logListeners() {
-    this.once("adblock-onBeforeRequest-ready", ()=> {
-      if (this.withConsole) 
-        this._log('HANDLER INITIALIZATION', {
-        
-            setWindowOpenHandler: { 
-              registered: true,  
-              withWindowOpenHandler: this.withWindowOpenHandler, 
-              owner: this.withWindowOpenHandler ? 'consumer' : 'adblock'
-            },
-            onBeforeRequest: { 
-              registered: true,  
-              withBeforeRequest: this.withBeforeRequest, 
-              owner: this.withBeforeRequest ? 'consumer' : 'adblock'
-            },
-            
-        })
-    })
   }
 };
 

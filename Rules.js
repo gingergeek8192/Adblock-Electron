@@ -2,8 +2,7 @@ import { Request, CosmeticOption, RequestType } from '@adguard/tsurlfilter'
 
 const Rules = {
 
-    // type converter to adguard expected resource types
-    _resourceTypes(r) {
+    _type(r) {
         return ({
             mainFrame: { adguard: RequestType.Document },
             subFrame: { adguard: RequestType.SubDocument },
@@ -30,23 +29,24 @@ const Rules = {
                 new Request(
                     url, 
                     this.webContents?.getURL?.() ?? '', 
-                    this._resourceTypes(type).adguard
+                    this._type(type).adguard
                 )
             )
             .getBasicResult()
             return result !== null
         } 
         catch { return null }
-
     },
 
-    agFilters(url, type) {
+    agFilters(url, type, session) {
+        if (!this._urlActiveMonitor(session, url)) return null
+        // console.log('agFilters', url, type, session,  this[type === 'mainFrame'?'injectMain':'injectSub']) // TODO: Maybe make this a withConsole ??? 
         try {
             const r = this.Engine.getCosmeticResult(
                 new Request(
                     url,
                     null, 
-                    this._resourceTypes(type).adguard
+                    this._type(type).adguard
                 ), 
                 CosmeticOption.CosmeticOptionAll
             )
@@ -66,7 +66,21 @@ const Rules = {
                 .join('\n')
             return {
                 css: [css, elementHiding].filter(Boolean).join('\n'),
-                js: [...new Set(r.getScriptRules().map(x => x.getScript()))].join('\r\n'),
+                js: this.withConsole ? 
+                [ ...new Set(r.getScriptRules()
+                        .map(x => 
+                        x.getScript()
+                            .replace(
+                                /(\w+)\.apply\(this, updatedArgs\);/,
+                                (_, method) =>
+                                    `console.log('[AdGuard]', source.name, args);\n  ${method}.apply(this, updatedArgs);`
+                            )
+                        )
+                    )
+                ]
+                .join('\r\n') 
+                : 
+                [...new Set(r.getScriptRules().map(x => x.getScript()))].join('\r\n'),
             }
         }
         catch {

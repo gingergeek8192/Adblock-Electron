@@ -6,51 +6,115 @@ import Inject from './Inject.js'
 import Resources from './resources/Resources.js'
 import IIFE from './IIFE.js'
 import Log from './Logging.js' 
+import { URL as AdblockURL } from './url-parser/index.js'
+import { net } from 'electron'
 
 const Adblock = {
+    /**
+     * Cliqz original URL class - inherited by Ghostery https://github.com/gingergeek8192/url-parser
+     */
+    AdblockURL: AdblockURL,
     /**
      * Default engine independent network blocking array
      */
     blockIncludesArray: ["devtools", "devtool"],
-
     withAutoAttachFilterDefault: [
     { type: "service_worker", exclude: true },
     { type: "shared_worker", exclude: true },
     { type: "worker", exclude: true },
     ],
+    get isSetup() { Resources.setupRequired },
     /**
-     * Indicates Adblock ready state - if createReady event was fired 
+     * Initializes the adblock engine with specified language and filter groups.
+     * Polls for network connectivity if offline, then loads cached lists or fetches new ones.
+     * Emits 'adblock-resources' when the engine is ready for use.
+     *
+     * Defaults: language "en" and all filter groups enabled when called with no arguments.
+     *
+     * @param {Object} [options] - Configuration options
+     * @param {string} [options.withLanguageSpecific="en"] - Language code for language-specific filter lists
+     * @param {string[]} [options.withGroups=["AdBlocking", "Privacy", "SocialWidgets", "Annoyances", "Security", "Other", "Language"]] - Filter groups to enable
+     * @returns {boolean} true - Initialization started, listen for 'adblock-resources' event
+     */
+    setResources: ({
+        // Adblock is asynchronous by design, however, when initialised in sync mode,
+        // the engine builds synchronously. On first run, files are downloaded asynchronously
+        // and do not block app startup. On subsequent startups, calling setResources()
+        // from app.whenReady() ensures the engine is built before the application window appears.
+        withLanguageSpecific = "en",
+        withCloneMirror = { 
+            account: 'gingergeek8192',
+            optIns: [
+                `JSDELIVR`, 
+                `GITLAB`, 
+                `GITHUB`, 
+                `ADTIDY`
+            ]
+        },
+        withGroups = [        
+            `AdBlocking`,
+            `Privacy`,
+            `SocialWidgets`,
+            `Annoyances`,
+            `Security`,
+            `Other`,
+            `Language`,
+        ]
+    }={}) => {
+        // if setResources has been called setResourcesLock is set true by _setPROPS
+        if (Resources.setResourcesLock) return
+        // True after successful engine build
+        if (Manager.contains.isSet) return true
+        Resources._setPROPS(withLanguageSpecific.toLowerCase(), withGroups.map(wG=> wG.toLowerCase()), withCloneMirror)
+        Resources._throwBack = (err, code, percentage) => Resources.emit('adblock-error', { err, code, percentage })
+            const isCache = ['', Resources.logFile]
+                .every(ent => Resources._existsSync(Resources._getPath(ent)))
+            if (isCache)
+                Resources.paths = Resources._scanSync(Resources.ext[0], Resources._getPath())
+            Resources._registerReady()
+            void Resources._online(()=> void Resources._init(isCache))
+        return true
+    },
+    /**
+     * Indicates Adblock ready state - if createReady event has already fired
      * @returns Boolean
      */
     isReady() {
         return Manager.contains.isSet
     },
-
     /**
-     * Registers a consumer handler for window-open requests.
-     *
-     * Only available when `withWindowOpenHandler: true` is passed
-     * to `createAdblock()`.
-     *
-     * Electron's `webContents.setWindowOpenHandler()` is registered
-     * internally by the Adblock instance. Consumer-managed handling
-     * is an opt-in mode; otherwise, the package registers its own
-     * handler and denies window creation by default.
-     *
-     * This method throws if the required configuration was not
-     * selected during initialization.
+    * Event fires if offline is confirmed.
+    * 
+    * Offline is considered confirmed if no filters CDN is reachable, 
+    * 
+    * if generate 204 is unreachable and if electron net.isOnline is false 
+     * @param {*} callback 
      */
-    setWindowOpenHandler: () => {
-    // Expose consumer registration only when consumer-managed
-    // window handling was explicitly enabled. Otherwise, retain
-    // the throwing placeholder to enforce the initialization contract.
-    const error = new Error(
-        "Adblock must be instantiated with withWindowOpenHandler: true before setWindowOpenHandler listener",
-    );
-    Error.captureStackTrace(error, Adblock.setWindowOpenHandler);
-    throw error;
+    offLine(callback) {
+        Resources.once('adblock-offline', callback)
     },
-
+    /**
+     * exposes Electron isOnline via the Adblock object
+     * @returns boolean
+     */
+    isOnline() {
+       return net.isOnline()
+    },
+    /**
+     * Fires once online is confirmed. Only fires after offline was confirmed.
+     * 
+     * Online is considered confirmed any filters CDN is reachable
+     * @param {*} callback 
+     */
+    onlineReady(callback) {
+        Resources.once('adblock-online', callback)
+    },
+    /**
+     * Forces ready event
+     */
+    forceReady() {
+        Resources._forceReady()
+    },
     /**
      * Calls back when the WebContents is ready for URL loading.
      * @param {Electron.WebContents} webContents
@@ -60,54 +124,51 @@ const Adblock = {
     const Adblock = Manager.register.get(webContents.id);
     if (!Adblock) {
         const error = new Error(
-        "Adblock must be instantiated with webContents before loadReady listener",
+        `[Adblock] createReady must fire before urlReady can be registered`,
         );
         Error.captureStackTrace(error, this.urlReady);
         throw error;
     }
     Adblock.once("adblock-loadURL-ready", callback);
     },
-
     /**
-     * Calls back when the Adblock onBeforeRequest handler is ready.
-     * The callback receives the Adblock instance for request filtering.
-     * @param {Electron.WebContents} webContents
-     * @param {(blocker: Adblock) => void} callback
+     * ERROR WRITE_PERMISSION 100% - Adblock will function and cache on write permission
+     * 
+     * ERROR RESOURCE_DOWNLOAD 0 - 100% - Adblock will function with n% of total cached files. 
      */
-    onBeforeReady(webContents, callback) {
-    const Adblock = Manager.register.get(webContents.id);
-    if (!Adblock) {
-        const error = new Error(
-        "Adblock must be instantiated with webContents before onAdblockReady listener",
-        );
-        Error.captureStackTrace(error, this.onBeforeReady);
-        throw error;
-    }
-    Adblock.once("adblock-onBeforeRequest-ready", callback);
+    onResourceError(callback) {
+        Resources.on('adblock-error', callback)
     },
-
+    /**
+     * Calls back if no usable cache exists and filter lists must be downloaded
+     * before the engine can be built (first run, or a corrupt cache).
+     * Fires immediately if registered after setup began.
+     * Use it to show a loading/setup window instead of a guest page.
+     * @param {() => void} callback
+     */
+    setupRequired(callback) {
+        if (Resources.setupRequired) callback()
+        else Resources.once('adblock-setup-required', callback)
+    },
     /**
      * Calls back when the Adblock filter lists and resources are ready
      * for instance creation.
      * @param {() => void} callback
      */
     createReady(callback) {
-        if (Manager.contains.isSet) {
-            console.log("adblock-create-ready");
-            callback();
-        } 
-        else {
-            console.log("adblock-create-ready");
-            Resources.once("adblock-create-ready", callback);
-        }
+        if (Manager.contains.isSet) callback();
+        else Resources.once("adblock-create-ready", callback);
     },
-
     /**
      * Creates and initializes an Adblock instance for the supplied WebContents.
      *
+     * @function createAdblock
+     * @memberof Adblock
+     *
+     *
      * @param {Object} options
      * @param {Electron.WebContents} options.webContents
-     * The Electron WebContents instance to attach the adblocker to.
+     * The Electron WebContents instance to attach.
      *
      * @param {boolean} [options.withBeforeRequest=false]
      * Controls ownership of Electron's `webRequest.onBeforeRequest` handler.
@@ -115,9 +176,7 @@ const Adblock = {
      * When `false`, Adblock registers and manages its own internal
      * `onBeforeRequest` handler and performs network-level blocking automatically.
      *
-     * When `true`, Adblock does not register its own filtering handler.
-     * Instead, the consumer receives the bound `onBeforeRequest` handler through
-     * the Adblock API and is responsible for invoking the filtering logic.
+     * When `true`, the consumer receives the Adblock instance bound `onBeforeRequest` handler.
      *
      * This allows the consumer to integrate Adblock's request matching into an
      * existing network interception layer rather than having multiple
@@ -148,6 +207,13 @@ const Adblock = {
      * Supplying an empty array removes those exclusions and allows the default
      * CDP auto-attach behavior to be used.
      *
+     * @param {string[]} [options.withAllowIncludesArray=[]]
+     * URL substrings to explicitly allow, overriding AdGuard filtering rules.
+     *
+     * Matching uses `url.includes()`, so partial URL matches are sufficient.
+     * URLs matching an allow-list entry bypass Adblock's filtering rules.
+     *
+     * Explicit block rules take precedence over allow-list exceptions.
      * @param {string[]} [options.withBlockIncludesArray=['devtools', 'devtool']]
      * URL substrings to block independently of AdGuard's filtering rules.
      *
@@ -157,13 +223,6 @@ const Adblock = {
      * with cdn hosted anti-dev-tools scripts / developer-tools detection.
      *
      * Explicit block rules take precedence over allow-list exceptions.
-     *
-     * @param {boolean} [options.withDebuggerResume=true]
-     * Automatically resumes execution when debugger-paused targets are encountered.
-     *
-     * This can substantially reduce DOM load on some ad-heavy sites, but may
-     * interfere with legitimate page elements or site functionality.
-     * Disabled by default.
      *
      * @param {boolean} [options.withConsole=false]
      * Enables Adblock diagnostic console output.
@@ -175,7 +234,6 @@ const Adblock = {
     withAutoAttachFilter = this.withAutoAttachFilterDefault,
     withAllowIncludesArray = [],
     withBlockIncludesArray = this.blockIncludesArray,
-    withDebuggerResume = true,
     withConsole = false,
     } = {}) {
     if (!webContents) {
@@ -184,11 +242,9 @@ const Adblock = {
         Error.captureStackTrace(error, this.createAdblock);
         throw error;
     }
-
     const Adblock = new Manager.Adblock({
         Protocols: [
         ["Network.enable", "Network.disable", false, "Network"],
-        ["Debugger.enable", "Debugger.disable", false, "Debugger"],
         ["DOM.enable", "DOM.disable", false, "DOM"],
         ["Runtime.enable", "Runtime.disable", false, "Runtime"],
         [null, null, true, "Target"],
@@ -200,8 +256,8 @@ const Adblock = {
         ...CDP,
         ...Rules,
         ...Log,
-        urlRegEx:
-        /(?:https?:)?\/\/(?:[^@\s/]+@)?([^:/\s"'<>?#)]+)(?=[:/\s"'<>?#)]|$)/gi,
+        AdblockURL: AdblockURL,
+        urlRegEx: /(?:https?:)?\/\/(?:[^@\s/]+@)?([^:/\s"'<>?#)]+)(?=[:/\s"'<>?#)]|$)/gi,
         id: webContents.id,
         webContents: webContents,
         session: webContents.session,
@@ -212,16 +268,12 @@ const Adblock = {
         sessionIds: new Set(),
         cdpActiveSessionIds: new Set(),
         frameToSessionId: new Map(),
+        allFramesSessionIdEuwArElSet: new Set(),
+        allFramesSessionIdEuwArElMap: new Map(),
         mainLoadEvent:  null,
+        injectMain: true,
+        injectSub: true,
         mainFrameInjected: null,
-//      mainLoadEventMap: new Map([
-//        ["loading-url", null],
-//        ["loaded-url", null],
-//        ["did-start-navigation", false],
-//        ["did-start-loading", false],
-//        ["did-frame-finish-load", false],
-//        ["mainFrame-injected", null],
-//      ]),
         allow: false,
         tryLock: true,
         isReady: {},
@@ -230,118 +282,70 @@ const Adblock = {
         withWindowOpenHandler: withWindowOpenHandler,
         withAllowIncludesArray: withAllowIncludesArray,
         withBlockIncludesArray: withBlockIncludesArray,
-        withDebuggerResume: withDebuggerResume,
         withConsole: withConsole,
     });
-
     void Adblock._armAdblock();
-
     if (withWindowOpenHandler)
         this.setWindowOpenHandler = (webContents, callback) => {
         const Adblock = Manager.register.get(webContents.id);
-        Adblock.on("open-allow", callback);
+        Adblock.on("adblock-setWindowOpenHandler-ready", callback);
             Adblock.removeAllListeners('window-handler-reset')
             Adblock.once('window-handler-reset', ()=> {
                 this.setWindowOpenHandler = ()=> {
                     const error = new Error(
-                        "Adblock must be instantiated with withWindowOpenHandler: true before setWindowOpenHandler listener",
+                        '[Adblock] pass "withWindowOpenHandler: true" before setWindowOpenHandler listener',
                     );
                     Error.captureStackTrace(error, Adblock.setWindowOpenHandler);
                     throw error;
                 }
-                
             })
         };
-
         Manager.register.set(webContents.id, Adblock);
-
     },
-
-
     /**
-     * Initializes the adblock engine with specified language and filter groups.
-     * Polls for network connectivity if offline, then loads cached lists or fetches new ones.
-     * Emits 'adblock-resources' when the engine is ready for use.
-     *
-     * Defaults: language "en" and all filter groups enabled when called with no arguments.
-     *
-     * @param {Object} [options] - Configuration options
-     * @param {string} [options.withLanguageSpecific="en"] - Language code for language-specific filter lists
-     * @param {string[]} [options.withGroups=["AdBlocking", "Privacy", "SocialWidgets", "Annoyances", "Security", "Other", "Language"]] - Filter groups to enable
-     * @returns {boolean} true - Initialization started, listen for 'adblock-resources' event
+     * Calls back when the Adblock onBeforeRequest handler is ready.
+     * The callback receives the Adblock instance for request filtering.
+     * @param {Electron.WebContents} webContents
+     * @param {(blocker: Adblock) => void} callback
      */
-    setResources: ({
-        // Adblock is asynchronous by design, however, when initialised in sync mode,
-        // the engine builds synchronously. On first run, files are downloaded asynchronously
-        // and do not block app startup. On subsequent startups, calling setResources()
-        // from app.whenReady() ensures the engine is built before the application window appears.
-        withBuildSync = false,
-        withLanguageSpecific = "en",
-        withOwnMirror = { 
-            account: 'gingergeek8192', 
-            optIns: [
-                `JSDELIVR`, 
-                `GITLAB`, 
-                `GITHUB`
-            ]
-        },
-        withGroups = [        
-            `AdBlocking`,
-            `Privacy`,
-            `SocialWidgets`,
-            `Annoyances`,
-            `Security`,
-            `Other`,
-            `Language`,
-        ]
-    }={}) => {
-        // Adblock instance reference a single Engine / Resources instance 
-        // for concise update logic and uniform "hot" engine updates.
-        Resources._setPROPS(withLanguageSpecific.toLowerCase(), withGroups.map(wG=> wG.toLowerCase()), withBuildSync, withOwnMirror)
-        // Bind callback in case of registered onActionableResourceEvent
-        Resources._throwBack = (err, code, percentage) => Resources.emit('adblock-error', { err, code, percentage })
-        // If no cache and "offline" (all four resources unreachable) notify consumer 
-        Resources._checkNotIsEngine()
-        Resources.paths = []
-        // Callback passed to _online.
-        // If adtidy, jsdelivr, github or gitlab can not be reached it polls then executes on success
-        void Resources._online(()=> {
-            // '' cache Dir + logFile
-            const isCache = ['', Resources.logFile]
-                .every(ent => Resources._existsSync(Resources._getPath(ent)))
-            if (isCache)
-                // scan the lists dir for .txt file paths for comparison to log entries
-                Resources.paths = Resources._scanSync(Resources.ext[0], Resources._getPath())
-            // Resisters 'adblock-resources' to store lists once engine is built and all files are held in Map() 
-            Resources._registerReady()
-
-            void Resources._init(isCache)
-        })
-        return true
+    onBeforeReady(webContents, callback) {
+    const Adblock = Manager.register.get(webContents.id);
+    if (!Adblock) {
+        const error = new Error(
+        '[Adblock] pass "withBeforeRequest: true" before onBeforeReady listener',
+        );
+        Error.captureStackTrace(error, this.onBeforeReady);
+        throw error;
+    }
+    Adblock.once("adblock-onBeforeRequest-ready", callback);
     },
-
     /**
-     * Identifies actionable conditions with recovery success score as percentage ratio of operational capacity, 
-     * 
-     * exposes information for the host application to decide whether to take action.
-     * 
-     * 
-     * ERROR - code: META_STORE, percentage: 80 in % of operational capacity, Consequence: delays startup
-     * 
-     * ERROR -  code: WRITE_PERMISSION, percentage: 80 in % of operational capacity, Consequence: delays startup
-     * 
-     * ERROR -  code: RESOURCE_WRITE, percentage: 0 - 100 in % of successful list file writes, Consequence: delays startup
-     * 
-     * ERROR - code: METADATA_REQUEST, percentage: 0 in % of operational capacity, Consequence: fatal
-     * 
-     * ERROR -  code: RESOURCE_DOWNLOAD, percentage: 0 - 100 in % of successful list requests, Consequence: delays startup
-     * 
-     * ERROR -  code: OFFLINE, percentage: 0 | 100, Consequence: delays startup | fatal
+     * Registers a consumer handler for window-open requests.
+     *
+     * Only available when `withWindowOpenHandler: true` is passed
+     * to `createAdblock()`.
+     *
+     * Electron's `webContents.setWindowOpenHandler()` is registered
+     * internally by the Adblock instance. Consumer-managed handling
+     * is an opt-in mode; otherwise, the package registers its own
+     * handler and denies window creation by default.
+     *
+     * This method throws if the required configuration was not
+     * selected during initialization.
      */
-    onActionableResourceEvent(callback) {
-        Resources.on('adblock-error', callback)
+    setWindowOpenHandler: () => {
+    // Expose consumer registration only when consumer-managed
+    // window handling was explicitly enabled. Otherwise, retain
+    // the throwing placeholder to enforce the initialization contract.
+    const error = new Error(
+        '[Adblock] pass "withWindowOpenHandler: true" before setWindowOpenHandler listener',
+    );
+    Error.captureStackTrace(error, Adblock.setWindowOpenHandler);
+    throw error;
     }
 
 };
 
+
 export default Adblock
+export { AdblockURL }

@@ -2,12 +2,10 @@
 import Resources from './resources/Resources.js'
 import { EventEmitter } from 'node:events'
 const Manager = {
-    
     register: new Map(),
     contains: {
         isSet: false,
     },
-
     Adblock: class extends EventEmitter {
         constructor(params) {
             super()
@@ -89,7 +87,14 @@ const Manager = {
          * @returns {Promise<boolean|void>}
          */
         async _protocolEnable(sessionId) {
-            
+            // Protocol initialisation is expected to succeed on the first attempt.
+            // Months of real-world testing have shown no indication of sessions being
+            // removed during this process.
+            //
+            // The retry mechanism is precautionary rather than operationally necessary.
+            // It provides a limited recovery opportunity for unexpected enablement failures,
+            // without introducing repeated retries or unnecessary delays into the normal path.
+            //
             if (!this.tryLock) {
                 await this._sessionProtocols({
                     Protocols: this[sessionId].Protocols.filter(p => this[sessionId].InActiveToolSet.has(p[3])),
@@ -142,6 +147,7 @@ const Manager = {
         }
         /**
          * Checks each active child session is still live, cleans up dead sessions, and drains `sessionIds`.
+         * Removes sessionIds from url tracking Map().
          * Reschedules itself while pending sessions remain.
          * @returns {Promise<void>}
          */
@@ -151,36 +157,40 @@ const Manager = {
                 Enabling: [],
                 Cleaning: [],
             }
-
             if (!Manager.register.has(this.id)) return
             for (const id of [...this.cdpActiveSessionIds]) {
                 if (id === 'main') continue
                 if (this.withConsole) report.Checking.push(id)
                 try { await this._isLive(id) }
                 catch{
-                    if(this.cdpActiveSessionIds.has(id)) 
+                    if(this.cdpActiveSessionIds.has(id)) {
                         this.cdpActiveSessionIds.delete(id)
+                        this.allFramesSessionIdEuwArElMap.delete(id)
+                    }
                     if (this.withConsole) report.Cleaning.push(id)
                     void this._activeProtocol({ sessionId: id })
                 }
+                // This is supposed to be inside the loop brace. 
+                // Better to be early to the CDParty and get kicked out late 
+                // than face traffic delays and leave on the dot!
                 if (this.sessionIds.size > 0) {
-                    for (const id of [...this.sessionIds]) {
+                    for (const sid of [...this.sessionIds]) {
                         if (this.withConsole) 
                             report.Enabling.push({
-                                sessionId: id,
+                                sessionId: sid,
                                 remaining: this.sessionIds.size
                             })
-                        await this._enableSession(id)
+                        await this._enableSession(sid)
                     }
                 }
             }
-
             if (this.sessionIds.size > 0)
                 this.sessionMonitorTimeout = setTimeout(() => {
                     if (!Manager.register.has(this.id)) return
                     if (!this.sessionIds.size) return
                     void this._sessionActiveMonitor()
                 }, 200)
+
             if (this.withConsole) {
                 for (const key of Object.keys(report)) {
                     if (key !== 'Inactive' && Array.isArray(report[key]) && !report[key].length)
@@ -189,29 +199,52 @@ const Manager = {
             }
         }
         /**
-         * Logs protocol enable state and handler ownership to the console when `withConsole` is set.
-         * @param {boolean} isMain
-         * @param {boolean} autoAttach
+         * Compares the url of the current sessionId to the last url of the same sessionId
+         * If the url has changed on a subFrame, the new url is added to the map key'd by sessionId.
+         * If the mainframe domain or generalDomain has changed, the Map() is cleared. 
+         * If urls are unchanged returns false and blocks rule injection. 
+         * If changed return true to aow injection
          * @param {string} sessionId
-         * @param {boolean} r - `true` if fully capable
-         * @returns {void}
+         * @param {string} url
+         * @returns {boolean}
          */
-        _sessionLog(isMain, autoAttach, sessionId, r) {
-            if (!this.withConsole || !this[sessionId]?.Protocols) return
-            this._log(
-                `${isMain ? 'MAIN_FRAME' : 'SUB_FRAME'} CAPABILITY`,
-                {
-                    sessionId,
-                    Capability: r ? 'fullSet' : 'subSet',
-                    Protocols: this[sessionId].Protocols.map(p => ({
-                        Protocol: p[3],
-                        Enabled: p[2]
-                    })),
-                    AutoAttach: autoAttach,
-                    Active: [...this.cdpActiveSessionIds],
-                    Inactive: [...this.sessionIds]
+        _urlActiveMonitor(sessionId, url) {
+            if (typeof url !== 'string' || !url.length) return false
+            const URLObject = this.allFramesSessionIdEuwArElMap.get(sessionId)
+            let AdblockURL = null
+            if (!URLObject) {
+                this.allFramesSessionIdEuwArElMap.set(sessionId, new this.AdblockURL(url))
+                return true
+            }
+            else
+            if (URLObject) {
+                if (URLObject.href === url) return false
+                else
+                if (sessionId === 'main') {
+                    AdblockURL = new this.AdblockURL(url)
+                    if (URLObject.generalDomain !== AdblockURL.generalDomain || URLObject.hostname !== AdblockURL.hostname) {
+                        this.allFramesSessionIdEuwArElMap.clear()
+                        this.allFramesSessionIdEuwArElMap.set(sessionId, AdblockURL)
+                        return true
+                    }
                 }
-            )
+                else
+                {
+                    AdblockURL = new this.AdblockURL(url)
+                    if (URLObject.generalDomain !== AdblockURL.generalDomain || URLObject.hostname !== AdblockURL.hostname) {
+                        this.allFramesSessionIdEuwArElMap.set(sessionId, AdblockURL)
+                        return true
+                    }
+                }
+                if (
+                    URLObject.pathname !== AdblockURL.pathname 
+                    || URLObject.search !== AdblockURL.search
+                    // URLObject.hash !== AdblockURL.hash not used in tsurlfilters
+                ) {
+                    this.allFramesSessionIdEuwArElMap.set(sessionId, AdblockURL)
+                    return true
+                }
+            }
         }
         /**
          * Enables all CDP protocols for `sessionId`, adds it to `cdpActiveSessionIds` on success,
@@ -264,32 +297,15 @@ const Manager = {
                 this.debugger.attach('1.3')
             if (this.debugger.isAttached()) 
                 await this._enableSession('main') 
-            this._emitOnBeforeReady() // fire event
-            await new Promise(r => setTimeout(r, 200))
-            this._emitLoadUrlReady() // fire event
+            this._emitOnBeforeReady()
+            await new Promise(r => setTimeout(r, 100))
+            this._emitLoadUrlReady()
         }
     }
 };
-/**
- * Registers the `adblock-resources` listener. 
- * 
- * Merges the Resources instance into `Manager.contains` and sets `isSet` when the engine is first ready.
- */
-Resources._resourcesReady((props) => {
-    Object.assign(Manager.contains, props);
-    Manager.contains.isSet = true;
-    console.log('Adblock Ready');
-});
-
-/**
- * Registers the `adblock-lists-update` listener. 
- * 
- * Merges the updated Resources instance into `Manager.contains` on hot filter list updates.
- */
-Resources._listsUpdated((props) => {
-    Object.assign(Manager.contains, props);
+Resources._resourcesReady((props)=> {
+    Object.assign(Manager.contains,props)
     console.log(Manager.contains.Engine)
-    console.log('Adblock Updated');
 });
-
+Resources._listsUpdated((props)=>Object.assign(Manager.contains,props));
 export default Manager
