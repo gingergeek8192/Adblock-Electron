@@ -303,9 +303,6 @@ const Manager = {
         }
     }
 };
-Resources._resourcesReady((props)=> {
-    Object.assign(Manager.contains,props)
-    console.log(Manager.contains.Engine)
-});
+Resources._resourcesReady((props)=>Object.assign(Manager.contains,props));
 Resources._listsUpdated((props)=>Object.assign(Manager.contains,props));
 export default Manager

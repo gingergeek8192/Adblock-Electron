@@ -49,6 +49,189 @@ Additional third-party filter list support is planned.<br> Results shown below u
 
 
 ---
+
+
+<br> <br>
+
+**Adblock Test Logs 📋 🔥**
+
+Adblock-Electron `withConsole` logs instance initialization events, lifecycle and per-frame cosmetic CSS/JS filter injection. 
+
+<details>
+<summary>View Logs 🤓 </summary>
+
+```js
+
+ ────────────────────────────────────────────────────────────────────────
+   HANDLER INITIALIZATION
+ ────────────────────────────────────────────────────────────────────────
+ {
+   setWindowOpenHandler: { registered: true, withWindowOpenHandler: false, owner: 'adblock' },
+   onBeforeRequest: { registered: true, withBeforeRequest: false, owner: 'adblock' }
+ }
+ ────────────────────────────────────────────────────────────────────────
+ 
+ ────────────────────────────────────────────────────────────────────────
+   MAIN_FRAME CAPABILITY
+ ────────────────────────────────────────────────────────────────────────
+ {
+   sessionId: 'main',
+   Capability: 'fullSet',
+   Protocols: [
+     { Protocol: 'Network', Enabled: true },
+     { Protocol: 'DOM', Enabled: true },
+     { Protocol: 'Runtime', Enabled: true },
+     { Protocol: 'Target', Enabled: true },
+     { Protocol: 'Page', Enabled: true }
+   ],
+   AutoAttach: true,
+   Active: [ 'main' ],
+   Inactive: []
+ }
+ ────────────────────────────────────────────────────────────────────────
+ 
+ ────────────────────────────────────────────────────────────────────────
+   COSMETIC INJECTION
+ ────────────────────────────────────────────────────────────────────────
+ {
+   type: 'CSS',
+   frameId: '447CFE62E6A9AA4AD521D56E15849DB3',
+   sessionId: 'main',
+   frame: 'main_frame',
+   injected: true
+ }
+ ────────────────────────────────────────────────────────────────────────
+ 
+ 
+ ────────────────────────────────────────────────────────────────────────
+   SCRIPTLET INJECTION
+ ────────────────────────────────────────────────────────────────────────
+ {
+   type: 'JS',
+   frameId: '447CFE62E6A9AA4AD521D56E15849DB3',
+   sessionId: 'main',
+   frame: 'main_frame',
+   injected: true
+ }
+ ────────────────────────────────────────────────────────────────────────
+ 
+ ────────────────────────────────────────────────────────────────────────
+   COSMETIC INJECTION
+ ────────────────────────────────────────────────────────────────────────
+ {
+   type: 'CSS',
+   frameId: '447CFE62E6A9AA4AD521D56E15849DB3',
+   sessionId: 'main',
+   frame: 'main_frame',
+   injected: true
+ }
+ ────────────────────────────────────────────────────────────────────────
+ 
+ ────────────────────────────────────────────────────────────────────────
+   SCRIPTLET INJECTION
+ ────────────────────────────────────────────────────────────────────────
+ {
+   type: 'JS',
+   frameId: '447CFE62E6A9AA4AD521D56E15849DB3',
+   sessionId: 'main',
+   frame: 'main_frame',
+   injected: true
+ }
+ ────────────────────────────────────────────────────────────────────────
+ 
+ ────────────────────────────────────────────────────────────────────────
+   SUB_FRAME CAPABILITY
+ ────────────────────────────────────────────────────────────────────────
+ {
+   sessionId: '77C12D1BB4E92C61BD98B36E09AECEEE',
+   Capability: 'fullSet',
+   Protocols: [
+     { Protocol: 'Network', Enabled: true },
+     { Protocol: 'DOM', Enabled: true },
+     { Protocol: 'Runtime', Enabled: true },
+     { Protocol: 'Target', Enabled: true }
+   ],
+   AutoAttach: true,
+   Active: [ 'main', '77C12D1BB4E92C61BD98B36E09AECEEE' ],
+   Inactive: []
+ }
+ ────────────────────────────────────────────────────────────────────────
+ 
+ ────────────────────────────────────────────────────────────────────────
+   COSMETIC INJECTION
+ ────────────────────────────────────────────────────────────────────────
+ {
+   type: 'CSS',
+   frameId: '2A041DBFEC61863553AAEAB29D8EFF17',
+   sessionId: '77C12D1BB4E92C61BD98B36E09AECEEE',
+   frame: 'sub_frame',
+   injected: true
+ }
+ ────────────────────────────────────────────────────────────────────────
+ 
+ 
+ ────────────────────────────────────────────────────────────────────────
+   SCRIPTLET INJECTION
+ ────────────────────────────────────────────────────────────────────────
+ {
+   type: 'JS',
+   frameId: '2A041DBFEC61863553AAEAB29D8EFF17',
+   sessionId: '77C12D1BB4E92C61BD98B36E09AECEEE',
+   frame: 'sub_frame',
+   injected: true
+ }
+ ────────────────────────────────────────────────────────────────────────
+ 
+ ────────────────────────────────────────────────────────────────────────
+   SUB_FRAME CAPABILITY
+ ────────────────────────────────────────────────────────────────────────
+ {
+   sessionId: '7575EF8DA47DEE28FC0B2C671EB84CB6',
+   Capability: 'fullSet',
+   Protocols: [
+     { Protocol: 'Network', Enabled: true },
+     { Protocol: 'DOM', Enabled: true },
+     { Protocol: 'Runtime', Enabled: true },
+     { Protocol: 'Target', Enabled: true }
+   ],
+   AutoAttach: true,
+   Active: [ 'main', '77C12D1BB4E92C61BD98B36E09AECEEE', '7575EF8DA47DEE28FC0B2C671EB84CB6' ],
+   Inactive: []
+ }
+ ────────────────────────────────────────────────────────────────────────
+ 
+ ────────────────────────────────────────────────────────────────────────
+   COSMETIC INJECTION
+ ────────────────────────────────────────────────────────────────────────
+ {
+   type: 'CSS',
+   frameId: 'A7CC375839D3807C7DE944E3A5F166D0',
+   sessionId: '7575EF8DA47DEE28FC0B2C671EB84CB6',
+   frame: 'sub_frame',
+   injected: true
+ }
+ ────────────────────────────────────────────────────────────────────────
+ 
+ 
+ ────────────────────────────────────────────────────────────────────────
+   SCRIPTLET INJECTION
+ ────────────────────────────────────────────────────────────────────────
+ {
+   type: 'JS',
+   frameId: 'A7CC375839D3807C7DE944E3A5F166D0',
+   sessionId: '7575EF8DA47DEE28FC0B2C671EB84CB6',
+   frame: 'sub_frame',
+   injected: true
+ }
+ ────────────────────────────────────────────────────────────────────────
+
+
+```
+
+</details>
+
+<br><br>
+
 ## 🔒 Recommended `webPreferences`
 
 Adblock-Electron injects cosmetic CSS and JS into every frame, including cross-origin iframes. It needs no preload and no Node access, so use a locked-down window:
@@ -67,192 +250,6 @@ webPreferences: {
 ```
 
  Enabling `nodeIntegration` or `nodeIntegrationInSubFrames` gives untrusted frames access to Node, which allows remote code execution from any site or ad frame.
-
-<br> <br>
-
-**Adblock Test Logs 📋 🔥**
-
-Adblock-Electron `withConsole` logs instance initialization events, lifecycle and per-frame cosmetic CSS/JS filter injection. 
-
-<details>
-<summary>View Logs </summary>
-
-```js
-
-────────────────────────────────────────────────────────────────────────
-  HANDLER INITIALIZATION
-────────────────────────────────────────────────────────────────────────
-{
-  setWindowOpenHandler: { registered: true, withWindowOpenHandler: false, owner: 'adblock' },
-  onBeforeRequest: { registered: true, withBeforeRequest: false, owner: 'adblock' }
-}
-────────────────────────────────────────────────────────────────────────
-
-
-────────────────────────────────────────────────────────────────────────
-  COSMETIC INJECTION
-────────────────────────────────────────────────────────────────────────
-{
-  type: 'CSS',
-  frameId: '2C8AFEB26CAC865974781E93ACEAFB73',
-  sessionId: 'main',
-  frame: 'main_frame',
-  injected: true
-}
-────────────────────────────────────────────────────────────────────────
-
-
-────────────────────────────────────────────────────────────────────────
-  SCRIPTLET INJECTION
-────────────────────────────────────────────────────────────────────────
-{
-  type: 'JS',
-  frameId: '2C8AFEB26CAC865974781E93ACEAFB73',
-  sessionId: 'main',
-  frame: 'main_frame',
-  injected: true
-}
-────────────────────────────────────────────────────────────────────────
-
-
-────────────────────────────────────────────────────────────────────────
-  MAIN_FRAME CAPABILITY
-────────────────────────────────────────────────────────────────────────
-{
-  sessionId: 'main',
-  Capability: 'fullSet',
-  Protocols: [
-    { Protocol: 'Network', Enabled: true },
-    { Protocol: 'DOM', Enabled: true },
-    { Protocol: 'Runtime', Enabled: true },
-    { Protocol: 'Target', Enabled: true },
-    { Protocol: 'Page', Enabled: true }
-  ],
-  AutoAttach: true,
-  Active: [ 'main' ],
-  Inactive: []
-}
-────────────────────────────────────────────────────────────────────────
-
-
-────────────────────────────────────────────────────────────────────────
-  COSMETIC INJECTION
-────────────────────────────────────────────────────────────────────────
-{
-  type: 'CSS',
-  frameId: '2C8AFEB26CAC865974781E93ACEAFB73',
-  sessionId: 'main',
-  frame: 'main_frame',
-  injected: true
-}
-────────────────────────────────────────────────────────────────────────
-
-
-────────────────────────────────────────────────────────────────────────
-  SCRIPTLET INJECTION
-────────────────────────────────────────────────────────────────────────
-{
-  type: 'JS',
-  frameId: '2C8AFEB26CAC865974781E93ACEAFB73',
-  sessionId: 'main',
-  frame: 'main_frame',
-  injected: true
-}
-────────────────────────────────────────────────────────────────────────
-
-
-────────────────────────────────────────────────────────────────────────
-  SUB_FRAME CAPABILITY
-────────────────────────────────────────────────────────────────────────
-{
-  sessionId: '29CD4242FA6CE52EA2729189FA87FA4C',
-  Capability: 'fullSet',
-  Protocols: [
-    { Protocol: 'Network', Enabled: true },
-    { Protocol: 'DOM', Enabled: true },
-    { Protocol: 'Runtime', Enabled: true },
-    { Protocol: 'Target', Enabled: true }
-  ],
-  AutoAttach: true,
-  Active: [ 'main', '29CD4242FA6CE52EA2729189FA87FA4C' ],
-  Inactive: []
-}
-────────────────────────────────────────────────────────────────────────
-
-
-────────────────────────────────────────────────────────────────────────
-  COSMETIC INJECTION
-────────────────────────────────────────────────────────────────────────
-{
-  type: 'CSS',
-  frameId: 'FD2A4DD19E307F0ACB77392A11D39307',
-  sessionId: '29CD4242FA6CE52EA2729189FA87FA4C',
-  frame: 'sub_frame',
-  injected: true
-}
-────────────────────────────────────────────────────────────────────────
-
-
-────────────────────────────────────────────────────────────────────────
-  SCRIPTLET INJECTION
-────────────────────────────────────────────────────────────────────────
-{
-  type: 'JS',
-  frameId: 'FD2A4DD19E307F0ACB77392A11D39307',
-  sessionId: '29CD4242FA6CE52EA2729189FA87FA4C',
-  frame: 'sub_frame',
-  injected: true
-}
-────────────────────────────────────────────────────────────────────────
-
-
-────────────────────────────────────────────────────────────────────────
-  SUB_FRAME CAPABILITY
-────────────────────────────────────────────────────────────────────────
-{
-  sessionId: '3DB20DBD07F1AF4580DBB47C361C0E3D',
-  Capability: 'fullSet',
-  Protocols: [
-    { Protocol: 'Network', Enabled: true },
-    { Protocol: 'DOM', Enabled: true },
-    { Protocol: 'Runtime', Enabled: true },
-    { Protocol: 'Target', Enabled: true }
-  ],
-  AutoAttach: true,
-  Active: [ 'main', '29CD4242FA6CE52EA2729189FA87FA4C', '3DB20DBD07F1AF4580DBB47C361C0E3D' ],
-  Inactive: []
-}
-────────────────────────────────────────────────────────────────────────
-
-
-────────────────────────────────────────────────────────────────────────
-  COSMETIC INJECTION
-────────────────────────────────────────────────────────────────────────
-{
-  type: 'CSS',
-  frameId: '21B523093CCFF2832A154064B8A6D46E',
-  sessionId: '3DB20DBD07F1AF4580DBB47C361C0E3D',
-  frame: 'sub_frame',
-  injected: true
-}
-────────────────────────────────────────────────────────────────────────
-
-
-────────────────────────────────────────────────────────────────────────
-  SCRIPTLET INJECTION
-────────────────────────────────────────────────────────────────────────
-{
-  type: 'JS',
-  frameId: '21B523093CCFF2832A154064B8A6D46E',
-  sessionId: '3DB20DBD07F1AF4580DBB47C361C0E3D',
-  frame: 'sub_frame',
-  injected: true
-}
-────────────────────────────────────────────────────────────────────────
-
-```
-
-</details>
 
 <br>
 

@@ -450,7 +450,6 @@ const Resources = Object.assign(
         let T = 50
         let emitted =null
         const poll = async() => {
-             console.log('poll', this.unreachableEmitted)
             await req()
             if (this.mirrorOnline || this.readyStateForced) {
                 if (!cb) return
@@ -682,7 +681,6 @@ const Resources = Object.assign(
      * @returns {Promise<void>}
      */
     async _ready() {
-        console.log('_ready')
         this.Engine = await this._buildAdguardEngine()
         this.setupRequired = false;
         this.emit('adblock-resources', this);
@@ -748,7 +746,6 @@ const Resources = Object.assign(
      */
     _setUpdateScheduleEvents() {       
         if (this.readyStateForced) {
-            console.log('forceReady Success calling _runUpdateMeta')
             this.readyStateForced = false
             return this._runUpdateMeta(true)
         }     
