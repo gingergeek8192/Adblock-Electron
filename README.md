@@ -1,5 +1,5 @@
 # Adblock-Electron
-## UNDER  FURTHER DEVELOPMENT - DO NOT USE THIS REPO YET.
+## UNDER  FURTHER DEVELOPMENT - API CHANGES - DO NOT USE THIS REPO YET.
 An Electron adblocking package built on AdGuard's `tsurlfilter` engine.
 
 - **No IPC.**

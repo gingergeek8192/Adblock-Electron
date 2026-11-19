@@ -6,7 +6,20 @@
   "exports": {
     ".": "./Adblock.js"
   },
-  "files": ["./"],
+  "files": [
+    "Adblock.js",
+    "CDP.js",
+    "Events.js",
+    "IIFE.js",
+    "Inject.js",
+    "Logging.js",
+    "Manager.js",
+    "Rules.js",
+    "resources/",
+    "url-parser/",
+    "test/",
+    "README.md"
+  ],
   "dependencies": {
     "tldts-experimental": "latest",
     "@adguard/tsurlfilter": "^6.0.4"
