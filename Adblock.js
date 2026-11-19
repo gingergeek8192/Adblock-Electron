@@ -7,7 +7,7 @@ import Resources from './resources/Resources.js'
 import IIFE from './IIFE.js'
 import Log from './Logging.js' 
 import { URL as AdblockURL } from './url-parser/index.js'
-import { net } from 'electron'
+import  net  from './test/FaultCases.js'
 
 const Adblock = {
     /**

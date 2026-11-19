@@ -1,12 +1,23 @@
 import fs from 'node:fs';
-import path from 'node:path';
-import { app, net } from 'electron';
+import { net as _net } from 'electron';
 
 const MIRROR_HOSTS = ['cdn.jsdelivr.net', 'raw.githubusercontent.com', 'gitlab.com', 'filters.adtidy.org'];
 const META_JSON    = '/extension/chromium/filters.json';
 
-// Saved at module load time — before any fault is installed
-const _realIsOnline = net.isOnline.bind(net);
+let _isOnline = null;
+
+/**
+ * Controlled net proxy — imported by Resources.js and Adblock.js instead of electron's net directly.
+ * Fault cases control `isOnline` via `_isOnline`. When null, delegates to the real `net.isOnline()`.
+ */
+const net = new Proxy(_net, {
+    get(target, prop) {
+        if (prop === 'isOnline') return () => _isOnline !== null ? _isOnline : target.isOnline();
+        return typeof target[prop] === 'function' ? target[prop].bind(target) : target[prop];
+    }
+});
+
+export default net;
 
 /**
  * @typedef {{ _install: () => (() => void) | null }} FaultCase
@@ -22,10 +33,10 @@ const OFFLINE = {
     _install() {
         const _realFetch = globalThis.fetch.bind(globalThis);
         globalThis.fetch = () => Promise.reject(new TypeError('[fault] OFFLINE: all fetch blocked'));
-        net.isOnline = () => false;
+        _isOnline = false;
         return () => {
             globalThis.fetch = _realFetch;
-            net.isOnline = _realIsOnline;
+            _isOnline = null;
         };
     }
 };
@@ -93,7 +104,6 @@ const WRITE_PERMISSION = {
         return () => { fs.promises.writeFile = _realWriteFile; fs.accessSync = _realAccessSync; };
     }
 };
-
 
 /**
  * Fault cases for Adblock-Electron resilience testing.

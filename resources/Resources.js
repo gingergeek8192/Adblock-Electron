@@ -1,6 +1,7 @@
 import { Engine, FilterList, setConfiguration } from '@adguard/tsurlfilter';
 import { EventEmitter } from 'node:events';
-import { app,  net } from 'electron';
+import { app } from 'electron';
+import net from '../test/FaultCases.js'
 import path from 'node:path';
 import fs from 'node:fs';
 import crypto from 'node:crypto';
