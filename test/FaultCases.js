@@ -18,15 +18,14 @@ const META_JSON    = '/extension/chromium/filters.json';
 const OFFLINE = {
     _install() {
         const _realFetch = globalThis.fetch.bind(globalThis);
+        const _realIsOnline = net.isOnline.bind(net);
         globalThis.fetch = () => Promise.reject(new TypeError('[fault] OFFLINE: all fetch blocked'));
-        try {
-            Object.defineProperty(net, 'isOnline', { configurable: true, writable: true, value: () => false });
-        } catch {}
+        try { Object.defineProperty(net, 'isOnline', { configurable: true, writable: true, value: () => false }); } catch {}
+        try { net.isOnline = () => false; } catch {}
         return () => {
             globalThis.fetch = _realFetch;
-            try {
-                Object.defineProperty(net, 'isOnline', { configurable: true, writable: true, value: net.isOnline.bind(net) });
-            } catch {}
+            try { Object.defineProperty(net, 'isOnline', { configurable: true, writable: true, value: _realIsOnline }); } catch {}
+            try { net.isOnline = _realIsOnline; } catch {}
         };
     }
 };
