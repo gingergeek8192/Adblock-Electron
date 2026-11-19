@@ -15,13 +15,24 @@ const META_JSON    = '/extension/chromium/filters.json';
  * Expected: `adblock-offline` fires, polling begins, recovers when restored.
  * @type {FaultCase}
  */
+const _overrideIsOnline = (fn) => {
+    try {
+        Object.defineProperty(net, 'isOnline', { configurable: true, value: fn });
+    } catch {}
+};
+const _restoreIsOnline = () => {
+    try {
+        Object.defineProperty(net, 'isOnline', { configurable: true, value: _realNetIsOnline });
+    } catch {}
+};
+const _realNetIsOnline = net.isOnline.bind(net);
+
 const OFFLINE = {
     _install() {
-        const _realFetch    = globalThis.fetch.bind(globalThis);
-        const _realIsOnline = net.isOnline.bind(net);
+        const _realFetch = globalThis.fetch.bind(globalThis);
         globalThis.fetch = () => Promise.reject(new TypeError('[fault] OFFLINE: all fetch blocked'));
-        net.isOnline     = () => { console.log('[fault] OFFLINE: net.isOnline → false'); return false; };
-        return () => { globalThis.fetch = _realFetch; net.isOnline = _realIsOnline; };
+        _overrideIsOnline(() => { console.log('[fault] OFFLINE: net.isOnline → false'); return false; });
+        return () => { globalThis.fetch = _realFetch; _restoreIsOnline(); };
     }
 };
 
@@ -35,7 +46,9 @@ const MIRROR_DOWN = {
     _install() {
         const _realFetch = globalThis.fetch.bind(globalThis);
         globalThis.fetch = (url, init) => {
-            if (MIRROR_HOSTS.some(h => String(url).includes(h))) {
+            const s = String(url);
+            // let pings through so mirrorOnline = true, block everything else on mirror hosts
+            if (MIRROR_HOSTS.some(h => s.includes(h)) && !s.includes('ping.json')) {
                 console.log('[fault] MIRROR_DOWN: blocked →', url);
                 return Promise.reject(new TypeError('[fault] MIRROR_DOWN: unreachable'));
             }
@@ -74,12 +87,17 @@ const NO_META = {
  */
 const WRITE_PERMISSION = {
     _install() {
-        const _realWriteFile = fs.promises.writeFile.bind(fs.promises);
+        const _realWriteFile  = fs.promises.writeFile.bind(fs.promises);
+        const _realAccessSync = fs.accessSync.bind(fs);
         fs.promises.writeFile = (...args) => {
             console.log('[fault] WRITE_PERMISSION: writeFile blocked →', args[0]);
             return Promise.reject(Object.assign(new Error('[fault] EACCES'), { code: 'EACCES' }));
         };
-        return () => { fs.promises.writeFile = _realWriteFile; };
+        fs.accessSync = (p, mode) => {
+            if (mode === fs.constants.W_OK) throw Object.assign(new Error('[fault] EACCES'), { code: 'EACCES' });
+            return _realAccessSync(p, mode);
+        };
+        return () => { fs.promises.writeFile = _realWriteFile; fs.accessSync = _realAccessSync; };
     }
 };
 
