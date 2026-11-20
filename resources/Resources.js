@@ -452,6 +452,7 @@ const Resources = Object.assign(
         const poll = async() => {
             await req()
             if (this.mirrorOnline || this.readyStateForced) {
+                if (net.isOnline() && await this._gen204()) this.emit('adblock-online')
                 if (!cb) return
                 return void cb()
             }
@@ -469,7 +470,7 @@ const Resources = Object.assign(
                     this.unreachableEmitted = true
                     void this._handleResourceError('unreachable')
                 }
-                this.emit('adblock-online')
+               
             }
            
             setTimeout(poll, T)
