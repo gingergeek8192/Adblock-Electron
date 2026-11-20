@@ -26,46 +26,46 @@ const Resources = Object.assign(
              * Lightweight json response. Pre resource-request ping and schedule update verification.
              * @returns JSON {"ok":true,"updatedAt":"2026-11-09T16:51:28Z","nextUpdate":"2026-11-10T05:51:28Z"}
              */
-            JSDELIVR_PING: `https://cdn.jsdelivr.net/gh/${withOwnMirror.account}/adtidy-filter-mirror@main/public/ping.json`,
+            JSDELIVR_PING: `https://cdn.jsdelivr.net/gh/${withOwnMirror.account}/adtidy-filter-mirror@main/public/ping.jsons`,
             /**
              * Base for all jsdelivr hosted list resources - local metadata rebuild should jsdelivr or github filters.json be unreachable
              */
-            JSDELIVR_BASE: `https://cdn.jsdelivr.net/gh/${withOwnMirror.account}/adtidy-filter-mirror@main/public/extension/chromium/`,
+            JSDELIVR_BASE: `https://cdn.jsdelivr.net/gh/${withOwnMirror.account}/adtidy-filter-mirror@main/public/extension/chromium/s`,
             /**
              * Jsdelivr hosted filters metadata holds all resource url entries consumed by Adblock-Electron
              */
-            JSDELIVR_JSON: `https://cdn.jsdelivr.net/gh/${withOwnMirror.account}/adtidy-filter-mirror@main/public/extension/chromium/filters.json`,
+            JSDELIVR_JSON: `https://cdn.jsdelivr.net/gh/${withOwnMirror.account}/adtidy-filter-mirror@main/public/extension/chromium/filters.jsons`,
 
             /**
              * Lightweight json response. Pre resource-request ping and schedule update verification.
              * @returns JSON {"ok":true,"updatedAt":"2026-11-09T16:51:28Z","nextUpdate":"2026-11-10T05:51:28Z"}
              */
-            GITHUB_PING: `https://raw.githubusercontent.com/${withOwnMirror.account}/adtidy-filter-mirror/main/public/ping.json`,
+            GITHUB_PING: `https://raw.githubusercontent.com/${withOwnMirror.account}/adtidy-filter-mirror/main/public/ping.jsons`,
             /**
              * Base for all github hosted list resources - local metadata rebuild should jsdelivr or github filters.json be unreachable
              */
-            GITHUB_BASE: `https://raw.githubusercontent.com/${withOwnMirror.account}/adtidy-filter-mirror/main/public/extension/chromium/`,
+            GITHUB_BASE: `https://raw.githubusercontent.com/${withOwnMirror.account}/adtidy-filter-mirror/main/public/extension/chromium/s`,
             /**
              * Github hosted filters metadata holds all resource url entries consumed by Adblock-Electron
              */
-            GITHUB_JSON: `https://raw.githubusercontent.com/${withOwnMirror.account}/adtidy-filter-mirror/main/public/extension/chromium/filters.json`,
+            GITHUB_JSON: `https://raw.githubusercontent.com/${withOwnMirror.account}/adtidy-filter-mirror/main/public/extension/chromium/filters.jsons`,
             /**
              * Lightweight json response. Pre resource-request ping and schedule update verification.
              * @returns JSON {"ok":true,"updatedAt":"2026-11-09T16:51:28Z","nextUpdate":"2026-11-10T05:51:28Z"}
              */
-            GITLAB_PING: `https://gitlab.com/${withOwnMirror.account}/redundancy-layers/-/raw/main/public/ping.json`,
+            GITLAB_PING: `https://gitlab.com/${withOwnMirror.account}/redundancy-layers/-/raw/main/public/ping.jsons`,
             /**
              * Base for all gitlab hosted list resources - local metadata rebuild should jsdelivr or github filters.json be unreachable
              */
-            GITLAB_BASE: `https://gitlab.com/${withOwnMirror.account}/redundancy-layers/-/raw/main/public/extension/chromium/`,
+            GITLAB_BASE: `https://gitlab.com/${withOwnMirror.account}/redundancy-layers/-/raw/main/public/extension/chromium/s`,
             /**
              * Gitlab hosted filters metadata holds all resource url entries consumed by Adblock-Electron
              */
-            GITLAB_JSON: `https://gitlab.com/${withOwnMirror.account}/redundancy-layers/-/raw/main/public/extension/chromium/filters.json`,
+            GITLAB_JSON: `https://gitlab.com/${withOwnMirror.account}/redundancy-layers/-/raw/main/public/extension/chromium/filters.jsons`,
             /**
              * Adtidy metadata fallback path in case primary meta source is unreachable
              */
-            ADTIDY_JSON: `https://filters.adtidy.org/extension/chromium/filters.json`,
+            ADTIDY_JSON: `https://filters.adtidy.org/extension/chromium/filters.jsons`,
             /**
              * Final online check URL given the chances of 5 endpoints being simultaneously unavailable
              */
@@ -468,7 +468,7 @@ const Resources = Object.assign(
             if (net.isOnline() && await this._gen204()) {
                 if (!this.mirrorOnline && !this.unreachableEmitted) {
                     this.unreachableEmitted = true
-                    this._handleResourceError('unreachable')
+                    void this._handleResourceError('unreachable')
                 }
                 this.emit('adblock-online')
             }
@@ -560,7 +560,7 @@ const Resources = Object.assign(
             if (this.paths.length) {
                 const percent = this._failRate(R)
                 if (percent > 0)
-                    this._handleResourceError()
+                    void this._handleResourceError()
             }
             void this[branch]()
         })
@@ -713,12 +713,12 @@ const Resources = Object.assign(
     _listsUpdated(callback) {
         this.on('adblock-lists-update', callback);
     },
-    _handleResourceError(err) {
-        this._scanAsync(this.ext[0])
-        .then((paths)=> {
-            const percentInCache = 100 - (this.log?.reckon - paths.length) * (this.log?.reckon / 100)
-            this._throwBack('ERROR', err === 'unreachable' ?  'RESOURCE_OFFLINE' : 'RESOURCE_DOWNLOAD', (!isNaN(percentInCache) && Number.isFinite(percentInCache)) ? Math.round(percentInCache) : 0)
-        })
+    async _handleResourceError(err) {
+        const paths = await this._scanAsync(this.ext[0])
+        const log = await this._readJSONAsync()
+        this.log = JSON.parse(log)
+        const percentInCache = 100 - (this.log?.reckon - paths.length) * (this.log?.reckon / 100)
+        this._throwBack('ERROR', err === 'unreachable' ?  'RESOURCE_OFFLINE' : 'RESOURCE_DOWNLOAD', (!isNaN(percentInCache) && Number.isFinite(percentInCache)) ? Math.round(percentInCache) : 0)
     },
     /**
      * Triggers a metadata request and processes the response.
@@ -732,7 +732,7 @@ const Resources = Object.assign(
             this._getMeta()    
             .then(({ json, source }) => {
                     if (!json) 
-                        return this._handleResourceError()
+                        return void this._handleResourceError()
                 void this._processLists(this._listMeta(json, source), update? '_update': '_ready')
             })
         )
