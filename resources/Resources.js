@@ -1,7 +1,7 @@
 import { Engine, FilterList, setConfiguration } from '@adguard/tsurlfilter';
 import { EventEmitter } from 'node:events';
 import { app } from 'electron';
-import net from '../test/FaultCases.js'
+import twat from '../test/FaultCases.js'
 import path from 'node:path';
 import fs from 'node:fs';
 import crypto from 'node:crypto';
@@ -456,7 +456,7 @@ const Resources = Object.assign(
                 if (!cb) return
                 return void cb()
             }
-            if (!net.isOnline() && !await this._gen204())   {
+            if (!twat.isOnline() && !await this._gen204())   {
                 if (!emitted) {
                     this.emit('adblock-offline')
                 }
@@ -465,7 +465,8 @@ const Resources = Object.assign(
                     emitted = true
                     if (!cb) return
             }
-            if (net.isOnline() && await this._gen204()) {
+            console.log(twat.isOnline())
+            if (twat.isOnline() && await this._gen204()) {
                 if (!this.mirrorOnline && !this.unreachableEmitted) {
                     this.unreachableEmitted = true
                     this._handleResourceError('unreachable')

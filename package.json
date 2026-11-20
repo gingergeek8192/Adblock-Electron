@@ -4,8 +4,7 @@
   "type": "module",
   "main": "./Adblock.js",
   "exports": {
-    ".": "./Adblock.js",
-    "./test": "./test/FaultCases.js"
+    ".": "./Adblock.js"
   },
   "files": [
     "Adblock.js",
