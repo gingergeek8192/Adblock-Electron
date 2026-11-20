@@ -464,7 +464,6 @@ const Resources = Object.assign(
                     emitted = true
                     if (!cb) return
             }
-            console.log(net.isOnline())
             if (net.isOnline() && await this._gen204()) {
                 if (!this.mirrorOnline && !this.unreachableEmitted) {
                     this.unreachableEmitted = true
