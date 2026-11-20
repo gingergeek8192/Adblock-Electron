@@ -26,46 +26,46 @@ const Resources = Object.assign(
              * Lightweight json response. Pre resource-request ping and schedule update verification.
              * @returns JSON {"ok":true,"updatedAt":"2026-11-09T16:51:28Z","nextUpdate":"2026-11-10T05:51:28Z"}
              */
-            JSDELIVR_PING: `https://cdn.jsdelivr.net/gh/${withOwnMirror.account}/adtidy-filter-mirror@main/public/ping.jsons`,
+            JSDELIVR_PING: `https://cdn.jsdelivr.net/gh/${withOwnMirror.account}/adtidy-filter-mirror@main/public/ping.json`,
             /**
              * Base for all jsdelivr hosted list resources - local metadata rebuild should jsdelivr or github filters.json be unreachable
              */
-            JSDELIVR_BASE: `https://cdn.jsdelivr.net/gh/${withOwnMirror.account}/adtidy-filter-mirror@main/public/extension/chromium/s`,
+            JSDELIVR_BASE: `https://cdn.jsdelivr.net/gh/${withOwnMirror.account}/adtidy-filter-mirror@main/public/extension/chromium/`,
             /**
              * Jsdelivr hosted filters metadata holds all resource url entries consumed by Adblock-Electron
              */
-            JSDELIVR_JSON: `https://cdn.jsdelivr.net/gh/${withOwnMirror.account}/adtidy-filter-mirror@main/public/extension/chromium/filters.jsons`,
+            JSDELIVR_JSON: `https://cdn.jsdelivr.net/gh/${withOwnMirror.account}/adtidy-filter-mirror@main/public/extension/chromium/filters.json`,
 
             /**
              * Lightweight json response. Pre resource-request ping and schedule update verification.
              * @returns JSON {"ok":true,"updatedAt":"2026-11-09T16:51:28Z","nextUpdate":"2026-11-10T05:51:28Z"}
              */
-            GITHUB_PING: `https://raw.githubusercontent.com/${withOwnMirror.account}/adtidy-filter-mirror/main/public/ping.jsons`,
+            GITHUB_PING: `https://raw.githubusercontent.com/${withOwnMirror.account}/adtidy-filter-mirror/main/public/ping.json`,
             /**
              * Base for all github hosted list resources - local metadata rebuild should jsdelivr or github filters.json be unreachable
              */
-            GITHUB_BASE: `https://raw.githubusercontent.com/${withOwnMirror.account}/adtidy-filter-mirror/main/public/extension/chromium/s`,
+            GITHUB_BASE: `https://raw.githubusercontent.com/${withOwnMirror.account}/adtidy-filter-mirror/main/public/extension/chromium/`,
             /**
              * Github hosted filters metadata holds all resource url entries consumed by Adblock-Electron
              */
-            GITHUB_JSON: `https://raw.githubusercontent.com/${withOwnMirror.account}/adtidy-filter-mirror/main/public/extension/chromium/filters.jsons`,
+            GITHUB_JSON: `https://raw.githubusercontent.com/${withOwnMirror.account}/adtidy-filter-mirror/main/public/extension/chromium/filters.json`,
             /**
              * Lightweight json response. Pre resource-request ping and schedule update verification.
              * @returns JSON {"ok":true,"updatedAt":"2026-11-09T16:51:28Z","nextUpdate":"2026-11-10T05:51:28Z"}
              */
-            GITLAB_PING: `https://gitlab.com/${withOwnMirror.account}/redundancy-layers/-/raw/main/public/ping.jsons`,
+            GITLAB_PING: `https://gitlab.com/${withOwnMirror.account}/redundancy-layers/-/raw/main/public/ping.json`,
             /**
              * Base for all gitlab hosted list resources - local metadata rebuild should jsdelivr or github filters.json be unreachable
              */
-            GITLAB_BASE: `https://gitlab.com/${withOwnMirror.account}/redundancy-layers/-/raw/main/public/extension/chromium/s`,
+            GITLAB_BASE: `https://gitlab.com/${withOwnMirror.account}/redundancy-layers/-/raw/main/public/extension/chromium/`,
             /**
              * Gitlab hosted filters metadata holds all resource url entries consumed by Adblock-Electron
              */
-            GITLAB_JSON: `https://gitlab.com/${withOwnMirror.account}/redundancy-layers/-/raw/main/public/extension/chromium/filters.jsons`,
+            GITLAB_JSON: `https://gitlab.com/${withOwnMirror.account}/redundancy-layers/-/raw/main/public/extension/chromium/filters.json`,
             /**
              * Adtidy metadata fallback path in case primary meta source is unreachable
              */
-            ADTIDY_JSON: `https://filters.adtidy.org/extension/chromium/filters.jsons`,
+            ADTIDY_JSON: `https://filters.adtidy.org/extension/chromium/filters.json`,
             /**
              * Final online check URL given the chances of 5 endpoints being simultaneously unavailable
              */
