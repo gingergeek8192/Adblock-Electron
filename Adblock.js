@@ -7,7 +7,7 @@ import Resources from './resources/Resources.js'
 import IIFE from './IIFE.js'
 import Log from './Logging.js' 
 import { URL as AdblockURL } from './url-parser/index.js'
-import  twat  from './test/FaultCases.js'
+import  { net }  from 'electron'
 
 const Adblock = {
     /**
@@ -98,7 +98,7 @@ const Adblock = {
      * @returns boolean
      */
     isOnline() {
-       return twat.isOnline()
+       return net.isOnline()
     },
     /**
      * Fires once online is confirmed. Only fires after offline was confirmed.
