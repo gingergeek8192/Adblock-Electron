@@ -291,7 +291,6 @@ const Adblock = {
             const Adblock = Manager.register.get(webContents.id);
             Adblock.on("adblock-setWindowOpenHandler-ready", callback);
                 Adblock.removeAllListeners('window-handler-reset')
-
                 Adblock.once('window-handler-reset', ()=> {
                     this.setWindowOpenHandler = ()=> {
                         const error = new Error(
@@ -302,7 +301,6 @@ const Adblock = {
                     }
                     this.setWindowOpenHandlerSet = false
                 })
-                
             };
             this.setWindowOpenHandlerSet = true
         }
