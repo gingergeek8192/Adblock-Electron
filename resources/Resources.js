@@ -457,11 +457,7 @@ const Resources = Object.assign(
                 return void cb()
             }
             if (!net.isOnline() && !await this._gen204())   {
-                if (!emitted) {
-                    this.emit('adblock-offline')
-                }
-                    
-                    
+                if (!emitted) this.emit('adblock-offline')
                     emitted = true
                     if (!cb) return
             }
@@ -470,9 +466,7 @@ const Resources = Object.assign(
                     this.unreachableEmitted = true
                     void this._handleResourceError('unreachable')
                 }
-               
             }
-           
             setTimeout(poll, T)
             T += 250
             if (T > 3500)  T = 1250

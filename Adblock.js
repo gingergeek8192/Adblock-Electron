@@ -24,6 +24,7 @@ const Adblock = {
     { type: "worker", exclude: true },
     ],
     get isSetup() { Resources.setupRequired },
+    setWindowOpenHandlerSet: false,
     /**
      * Initializes the adblock engine with specified language and filter groups.
      * Polls for network connectivity if offline, then loads cached lists or fetches new ones.
@@ -285,21 +286,26 @@ const Adblock = {
         withConsole: withConsole,
     });
     void Adblock._armAdblock();
-    if (withWindowOpenHandler)
-        this.setWindowOpenHandler = (webContents, callback) => {
-        const Adblock = Manager.register.get(webContents.id);
-        Adblock.on("adblock-setWindowOpenHandler-ready", callback);
-            Adblock.removeAllListeners('window-handler-reset')
-            Adblock.once('window-handler-reset', ()=> {
-                this.setWindowOpenHandler = ()=> {
-                    const error = new Error(
-                        '[Adblock] pass "withWindowOpenHandler: true" before setWindowOpenHandler listener',
-                    );
-                    Error.captureStackTrace(error, Adblock.setWindowOpenHandler);
-                    throw error;
-                }
-            })
-        };
+        if (withWindowOpenHandler && !this.setWindowOpenHandlerSet) {
+            this.setWindowOpenHandler = (webContents, callback) => {
+            const Adblock = Manager.register.get(webContents.id);
+            Adblock.on("adblock-setWindowOpenHandler-ready", callback);
+                Adblock.removeAllListeners('window-handler-reset')
+
+                Adblock.once('window-handler-reset', ()=> {
+                    this.setWindowOpenHandler = ()=> {
+                        const error = new Error(
+                            '[Adblock] pass "withWindowOpenHandler: true" before setWindowOpenHandler listener',
+                        );
+                        Error.captureStackTrace(error, Adblock.setWindowOpenHandler);
+                        throw error;
+                    }
+                    this.setWindowOpenHandlerSet = false
+                })
+                
+            };
+            this.setWindowOpenHandlerSet = true
+        }
         Manager.register.set(webContents.id, Adblock);
     },
     /**
